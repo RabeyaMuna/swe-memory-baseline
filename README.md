@@ -1,145 +1,293 @@
-<p align="center">
-  <a href="https://swe-agent.com/latest/">
-    <img src="assets/swe-agent-banner.png" alt="swe-agent.com" style="height: 7em" />
-  </a>
-</p>
+# SWE-Memory-Baseline
 
-<p align="center">
-<a href="https://swe-agent.com/latest/"><img src="https://img.shields.io/badge/Docs-green?style=for-the-badge&logo=materialformkdocs&logoColor=white" alt="Docs"></a>
-<a href="https://join.slack.com/t/swe-bench/shared_invite/zt-36pj9bu5s-o3_yXPZbaH2wVnxnss1EkQ"><img src="https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white" alt="Slack"></a>
-<a href="https://arxiv.org/abs/2405.15793"><img src="https://img.shields.io/badge/arxiv-2405.15793-red?style=for-the-badge&logo=arxiv&logoColor=white&labelColor=black" alt="arxiv 2405.15793"></a>
-</p>
+This repository evaluates a simple claim:
 
-<p align="center">
-  <a href="https://github.com/SWE-agent/mini-swe-agent/">
-    <img src="assets/warning.png" alt="mini-swe-agent.com" style="height: 7em" />
-  </a>
-</p>
+`Does adding retrieval-based memory improve a fixed repair scaffold on recurring CI failures?`
 
-> [!warning]
-> Most of our current development effort is on [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent/),
-> which has superseded SWE-agent. It matches the performance performance of SWE-agent, while being
-> much simpler.
-> See the [FAQ](https://mini-swe-agent.com/latest/faq/) for more details about the differences.
-> Our general recommendation is to use mini-SWE-agent instead of SWE-agent going forward.
+The scaffold is `SWE-agent`. The contribution here is not a new autonomous repair system. The contribution is a thin memory layer on top of the existing scaffold, so the comparison stays:
 
+- `SWE-agent` baseline
+- `SWE-agent + memory`
 
-SWE-agent enables your language model of choice (e.g. GPT-4o or Claude Sonnet 4) to autonomously use tools to
-[fix issues in real GitHub repositories](https://swe-agent.com/latest/usage/hello_world),
-[find cybersecurity vulnerabilities](https://enigma-agent.com/), or
-[perform any custom task](https://swe-agent.com/latest/usage/coding_challenges).
+## Purpose
 
-* ✅ **State of the art** on SWE-bench among open-source projects
-* ✅ **Free-flowing & generalizable**: Leaves maximal agency to the LM
-* ✅ **Configurable & fully documented**: Governed by a single `yaml` file
-* ✅ **Made for research**: Simple & hackable by design
+This project is designed for controlled benchmark evaluation on CI repair tasks. The goal is to measure whether prior solved failures, stored as reusable memory artifacts, help `SWE-agent` repair later failures from the same benchmark.
 
-SWE-agent is built and maintained by researchers from Princeton University and Stanford University.
+The intended benchmark source is:
 
-## 📣 News
+- `ci-benchmark-user/ci-repair-bench`
 
-* July 24: [Mini-SWE-Agent](https://github.com/SWE-agent/mini-SWE-agent) achieves 65% on SWE-bench verified in 100 lines of python!
-* May 2: [SWE-agent-LM-32b](https://github.com/SWE-bench/SWE-smith) achieves open-weights SOTA on SWE-bench
-* Feb 28: [SWE-agent 1.0 + Claude 3.7 is SoTA on SWE-Bench full](https://x.com/KLieret/status/1895487966409298067)
-* Feb 25: [SWE-agent 1.0 + Claude 3.7 is SoTA on SWE-bench verified](https://x.com/KLieret/status/1894408819670733158)
-* Feb 13: [Releasing SWE-agent 1.0: SoTA on SWE-bench light & tons of new features](https://x.com/KLieret/status/1890048205448220849)
-* Dec 7: [An interview with the SWE-agent & SWE-bench team](https://www.youtube.com/watch?v=fcr8WzeEXyk)
+The intended evaluation style is:
 
-## 🚀 Get started!
+1. Split benchmark rows into a memory-seed partition and an evaluation partition.
+2. Build memory only from the seed partition.
+3. Run `SWE-agent` on the evaluation partition with no memory.
+4. Run `SWE-agent` again on the exact same evaluation partition with retrieved memory hints.
+5. Compare outcomes.
 
-👉 Try SWE-agent in your browser: [![Open in GitHub Codespaces](https://img.shields.io/badge/Open_in_GitHub_Codespaces-gray?logo=github)](https://codespaces.new/SWE-agent/SWE-agent) ([more information](https://swe-agent.com/latest/installation/codespaces/))
+This matches the methodology requirement that the research contribution is the memory augmentation, not the full repair stack.
 
-Read our [documentation][docs] to learn more:
+## What Is In This Repo
 
-* [Installation](https://swe-agent.com/latest/installation/source/)
-* [Hello world from the command line](https://swe-agent.com/latest/usage/hello_world/)
-* [Benchmarking on SWE-bench](https://swe-agent.com/latest/usage/batch_mode/)
-* [Frequently Asked Questions](https://swe-agent.com/latest/faq/)
+This repo is a forked research workspace built on top of `SWE-agent`, with a small CI-repair benchmark layer added.
 
-[docs]: https://swe-agent.com
+New project-specific components:
 
-## SWE-agent for offensive cybersecurity (EnIGMA) <a name="enigma"></a>
+- [sweagent/benchmark/ci_repair_memory.py](sweagent/benchmark/ci_repair_memory.py)
+  dataset adaptation, split logic, memory record construction, retrieval, and prompt-context rendering
+- [scripts/prepare_ci_repair_bench.py](scripts/prepare_ci_repair_bench.py)
+  creates train/test style partitions from `ci-repair-bench`
+- [scripts/build_ci_repair_memory_bank.py](scripts/build_ci_repair_memory_bank.py)
+  builds a lightweight reusable memory bank from seed rows
+- [scripts/build_ci_repair_instances.py](scripts/build_ci_repair_instances.py)
+  produces `SWE-agent` expert instances for baseline and memory runs
+- [config/benchmarks/ci_repair_memory.yaml](config/benchmarks/ci_repair_memory.yaml)
+  benchmark prompt/config that injects retrieved memory as non-binding hints
 
-<img src="https://github.com/user-attachments/assets/84599168-11a7-4776-8a49-33dbf0758bb2" height="80px"></img>
+## Benchmark Artifacts
 
-[SWE-agent: EnIGMA][enigma] is a mode for solving offensive cybersecurity (capture the flag) challenges.
-EnIGMA achieves state-of-the-art results on multiple cybersecurity benchmarks (see [leaderboard](https://enigma-agent.com/#results)).
-Please use [SWE-agent 0.7](https://github.com/SWE-agent/SWE-agent/tree/v0.7) while we update EnIGMA for 1.0.
+The benchmark pipeline produces the following artifacts:
 
-[enigma]: https://enigma-agent.com
-[SWE-bench]: https://github.com/SWE-bench/SWE-bench
-[nyu-ctf]: https://arxiv.org/abs/2406.05590
+- `artifacts/ci_repair_split/memory_seed_rows.jsonl`
+  rows used to build memory
+- `artifacts/ci_repair_split/eval_rows.jsonl`
+  rows used for evaluation
+- `artifacts/ci_repair_split/memory_bank.json`
+  reusable memory records derived from seed issues
+- `artifacts/ci_repair_split/eval_instances_baseline.json`
+  `SWE-agent` instances for the no-memory baseline
+- `artifacts/ci_repair_split/eval_instances_memory.json`
+  `SWE-agent` instances for the memory-augmented run
+- `trajectories/...`
+  normal `SWE-agent` run outputs, patches, and trajectories
 
-In addition, you might be interested in our other projects:
+## Algorithm
 
+The memory mechanism in this repo is intentionally lightweight.
 
-<div align="center">
-  <a href="https://github.com/SWE-agent/mini-SWE-agent"><img src="docs/assets/mini_logo_text_below.svg" alt="Mini-SWE-Agent" height="120px"></a>
-   &nbsp;&nbsp;
-  <a href="https://github.com/SWE-agent/SWE-ReX"><img src="docs/assets/swerex_logo_text_below.svg" alt="SWE-ReX" height="120px"></a>
-   &nbsp;&nbsp;
-  <a href="https://github.com/SWE-bench/SWE-bench"><img src="docs/assets/swebench_logo_text_below.svg" alt="SWE-bench" height="120px"></a>
-  &nbsp;&nbsp;
-  <!-- <a href="https://github.com/SWE-agent/SWE-agent"><img src="docs/assets/sweagent_logo_text_below.svg" alt="SWE-agent" height="120px"></a> -->
-  <a href="https://github.com/SWE-bench/SWE-smith"><img src="docs/assets/swesmith_logo_text_below.svg" alt="SWE-smith" height="120px"></a>
-  &nbsp;&nbsp;
-  <a href="https://github.com/SWE-bench/sb-cli"><img src="docs/assets/sbcli_logo_text_below.svg" alt="sb-cli" height="120px"></a>
-</div>
+It does not reuse the full multi-agent logic from a separate CI repair project. Instead, it applies only the minimum additions needed for a fair benchmark ablation.
 
-## Contributions <a name="contributions"></a>
+### Step 1: Convert benchmark rows into repair tasks
 
-If you'd like to contribute to the codebase, we welcome [issues](https://github.com/SWE-agent/SWE-agent/issues) and [pull requests](https://github.com/SWE-agent/SWE-agent/pulls)! For larger code changes, we always encourage discussion in issues first.
+Each `ci-repair-bench` row is converted into a `SWE-agent` problem statement containing:
 
-## Citation & contact <a name="citation"></a>
+- repository identity
+- failing commit
+- workflow name and path
+- changed files
+- workflow YAML
+- failing log excerpts
 
-SWE-agent is an academic project started at Princeton University by John Yang*, Carlos E. Jimenez*, Alexander Wettig, Kilian Lieret, Shunyu Yao, Karthik Narasimhan, and Ofir Press.
-Contact person: [John Yang](https://john-b-yang.github.io/), [Carlos E. Jimenez](http://www.carlosejimenez.com/), and [Kilian Lieret](https://www.lieret.net/) (Email: johnby@stanford.edu, carlosej@cs.princeton.edu, kl5675@princeton.edu).
+The gold diff is used only on the memory-seed side to summarize past successful fixes. It is not exposed to the evaluation prompt for the current test instance.
 
-If you found this work helpful, please consider citing it using the following:
+### Step 2: Build reusable memory records
 
-<details>
-<summary> SWE-agent citation</summary>
+For each seed issue, the memory builder stores:
 
-```bibtex
-@inproceedings{yang2024sweagent,
-  title={{SWE}-agent: Agent-Computer Interfaces Enable Automated Software Engineering},
-  author={John Yang and Carlos E Jimenez and Alexander Wettig and Kilian Lieret and Shunyu Yao and Karthik R Narasimhan and Ofir Press},
-  booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
-  year={2024},
-  url={https://arxiv.org/abs/2405.15793}
-}
+- repo
+- workflow name and path
+- error types
+- changed files
+- failed commands parsed from logs
+- patch file targets extracted from the solved diff
+- coarse patch patterns such as `import_edit`, `formatting`, `whitespace`, or `general_code_edit`
+- a short fix summary
+
+### Step 3: Retrieve similar prior failures
+
+At evaluation time, each issue retrieves top prior records using a simple weighted score:
+
+- same repo
+- overlapping error type
+- same workflow name
+- overlapping changed files
+- overlapping log tokens
+
+Only top matches above a minimum score are kept.
+
+### Step 4: Inject memory into the prompt
+
+Retrieved records are rendered into `memory_context` and inserted into the benchmark prompt as:
+
+- prior repo/workflow context
+- prior changed files
+- prior failed commands
+- prior patch patterns
+- a short reusable fix hint
+
+The prompt explicitly tells the model to treat this as non-binding prior experience and ignore it if it conflicts with repository evidence.
+
+## Why This Design
+
+This design is deliberate.
+
+It keeps the research contribution narrow:
+
+- baseline scaffold stays `SWE-agent`
+- task instances stay benchmark-derived
+- memory is the only new capability under test
+
+This is the right setup for a paper or thesis question of the form:
+
+`Does memory improve an existing software-repair scaffold on recurring CI failures?`
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone git@github.com:RabeyaMuna/swe-memory-baseline.git
+cd swe-memory-baseline
 ```
-</details>
 
-If you used the summarizer, interactive commands or the offensive cybersecurity capabilities in SWE-agent, please also consider citing:
+### 2. Create an environment
 
-<details>
-<summary>EnIGMA citation</summary>
+Use Python `3.11+`.
 
-```bibtex
-@misc{abramovich2024enigmaenhancedinteractivegenerative,
-      title={EnIGMA: Enhanced Interactive Generative Model Agent for CTF Challenges},
-      author={Talor Abramovich and Meet Udeshi and Minghao Shao and Kilian Lieret and Haoran Xi and Kimberly Milner and Sofija Jancheska and John Yang and Carlos E. Jimenez and Farshad Khorrami and Prashanth Krishnamurthy and Brendan Dolan-Gavitt and Muhammad Shafique and Karthik Narasimhan and Ramesh Karri and Ofir Press},
-      year={2024},
-      eprint={2409.16165},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2409.16165},
-}
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
 ```
-</details>
 
+If you plan to run the benchmark with Docker-backed instances, also make sure Docker is installed and running.
 
-## 🪪 License <a name="license"></a>
-MIT. Check `LICENSE`.
+### 3. Set model credentials
 
+Set the provider keys needed by your chosen `SWE-agent` model configuration. For example:
 
-<div align="center">
+```bash
+export OPENAI_API_KEY=...
+export ANTHROPIC_API_KEY=...
+export GITHUB_TOKEN=...
+```
 
-[![Pytest](https://github.com/SWE-agent/SWE-agent/actions/workflows/pytest.yaml/badge.svg)](https://github.com/SWE-agent/SWE-agent/actions/workflows/pytest.yaml)
-[![build-docs](https://github.com/SWE-agent/SWE-agent/actions/workflows/build-docs.yaml/badge.svg)](https://github.com/SWE-agent/SWE-agent/actions/workflows/build-docs.yaml)
-[![codecov](https://codecov.io/gh/SWE-agent/SWE-agent/graph/badge.svg?token=18XAVDK365)](https://codecov.io/gh/SWE-agent/SWE-agent)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SWE-agent/SWE-agent/main.svg)](https://results.pre-commit.ci/latest/github/SWE-agent/SWE-agent/main)
-[![Markdown links](https://github.com/SWE-agent/SWE-agent/actions/workflows/check-links-periodic.yaml/badge.svg)](https://github.com/SWE-agent/SWE-agent/actions/workflows/check-links-periodic.yaml)
+`GITHUB_TOKEN` is recommended because benchmark instances clone GitHub repositories at specific commits.
 
-</div>
+## How To Run
+
+### 1. Prepare the benchmark split
+
+This creates a memory-seed partition and an evaluation partition.
+
+```bash
+python scripts/prepare_ci_repair_bench.py \
+  --dataset ci-benchmark-user/ci-repair-bench \
+  --split train \
+  --repos huggingface/diffusers canonical/cloud-init agno-agi/agno OpenAccess-AI-Collective/axolotl conan-io/conan flowersteam/flower \
+  --memory-ratio 0.3 \
+  --min-memory-per-repo 5 \
+  --output-dir artifacts/ci_repair_split
+```
+
+### 2. Build the memory bank
+
+```bash
+python scripts/build_ci_repair_memory_bank.py \
+  --seed-file artifacts/ci_repair_split/memory_seed_rows.jsonl \
+  --output-file artifacts/ci_repair_split/memory_bank.json
+```
+
+### 3. Build baseline instances
+
+```bash
+python scripts/build_ci_repair_instances.py \
+  --eval-file artifacts/ci_repair_split/eval_rows.jsonl \
+  --output-file artifacts/ci_repair_split/eval_instances_baseline.json
+```
+
+### 4. Build memory-augmented instances
+
+```bash
+python scripts/build_ci_repair_instances.py \
+  --eval-file artifacts/ci_repair_split/eval_rows.jsonl \
+  --memory-bank artifacts/ci_repair_split/memory_bank.json \
+  --output-file artifacts/ci_repair_split/eval_instances_memory.json \
+  --top-k 3 \
+  --min-score 0.15
+```
+
+### 5. Run the baseline
+
+```bash
+sweagent run-batch \
+  --config config/benchmarks/ci_repair_memory.yaml \
+  --instances.type expert_file \
+  --instances.path artifacts/ci_repair_split/eval_instances_baseline.json
+```
+
+### 6. Run the memory version
+
+```bash
+sweagent run-batch \
+  --config config/benchmarks/ci_repair_memory.yaml \
+  --instances.type expert_file \
+  --instances.path artifacts/ci_repair_split/eval_instances_memory.json
+```
+
+## Evaluation Logic
+
+The clean comparison is:
+
+- same model
+- same agent scaffold
+- same benchmark rows
+- same prompt template except for memory content
+- same budget and runtime settings
+
+Only the presence or absence of retrieved memory should change.
+
+Recommended reported metrics:
+
+- repair success rate
+- number of submitted patches
+- retrieval hit rate
+- retrieval precision
+- per-repo baseline vs memory deltas
+
+## Notes On Data Leakage
+
+To keep the benchmark valid:
+
+- do not put evaluation rows into the memory bank before testing them
+- do not expose the evaluation row’s gold diff to the model
+- build memory only from the seed partition
+- keep the split deterministic and documented
+
+## Relation To The Separate CI Repair Project
+
+This repository should not become a copy of a larger custom CI repair system.
+
+That larger system may contain:
+
+- custom fault localization agents
+- environment setup agents
+- retry loops
+- task-specific orchestration
+
+Those are useful engineering components, but they are not appropriate if the benchmark claim is specifically about memory augmentation of an existing scaffold.
+
+This repo therefore keeps only the thin parts needed for:
+
+- benchmark adaptation
+- memory construction
+- memory retrieval
+- prompt injection
+
+## Upstream
+
+This work is built on top of `SWE-agent`.
+
+Original project:
+
+- https://github.com/SWE-agent/SWE-agent
+
+If you use this repository, cite both:
+
+- the upstream `SWE-agent` paper
+- your own benchmark-memory study
+
+## License
+
+This repository inherits the upstream MIT license. See [LICENSE](LICENSE).
