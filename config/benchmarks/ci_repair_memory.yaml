@@ -1,0 +1,49 @@
+agent:
+  templates:
+    system_template: |-
+      You are a helpful assistant that can interact with a computer to solve software engineering tasks.
+    instance_template: |-
+      <uploaded_files>
+      {{working_dir}}
+      </uploaded_files>
+
+      The repository at {{working_dir}} is checked out at a commit with a failing CI workflow.
+
+      <task>
+      {{problem_statement}}
+      </task>
+
+      <retrieved_memory>
+      {{memory_context}}
+      </retrieved_memory>
+
+      Use `retrieved_memory` only as non-binding prior experience.
+      If it conflicts with repository evidence, logs, or the workflow definition, ignore it.
+      Make the minimal non-test code changes needed to repair the CI failure.
+      Validate your fix with the most relevant commands you can infer from the workflow and logs.
+    next_step_template: |-
+      OBSERVATION:
+      {{observation}}
+    next_step_no_output_template: |-
+      Your command ran successfully and did not produce any output.
+  tools:
+    env_variables:
+      PAGER: cat
+      MANPAGER: cat
+      LESS: -R
+      PIP_PROGRESS_BAR: "off"
+      TQDM_DISABLE: "1"
+      GIT_PAGER: cat
+    bundles:
+      - path: tools/registry
+      - path: tools/edit_anthropic
+      - path: tools/review_on_submit_m
+    registry_variables:
+      USE_FILEMAP: "true"
+    enable_bash_tool: true
+    parse_function:
+      type: function_calling
+  history_processors:
+    - type: cache_control
+      last_n_messages: 2
+

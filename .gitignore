@@ -208,3 +208,4 @@ website/frontend/build
 agent_conf
 sb-cli-reports/
 trajectories_sft/
+.codex/
