@@ -20,7 +20,7 @@ agent:
       Use `retrieved_memory` only as non-binding prior experience.
       If it conflicts with repository evidence, logs, or the workflow definition, ignore it.
       Make the minimal non-test code changes needed to repair the CI failure.
-      Validate your fix with the most relevant commands you can infer from the workflow and logs.
+      Validate your fix with the most relevant commands you can infer from the workflow and logs when the runtime supports it.
     next_step_template: |-
       OBSERVATION:
       {{observation}}
@@ -46,4 +46,3 @@ agent:
   history_processors:
     - type: cache_control
       last_n_messages: 2
-

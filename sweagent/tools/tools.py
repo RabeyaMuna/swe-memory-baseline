@@ -258,16 +258,35 @@ class ToolHandler:
         env_variables = self.config.env_variables.copy() | {
             var: os.getenv(var) for var in self.config.propagate_env_variables
         }
+        env_variables["SWE_AGENT_STATE_PATH"] = env.get_runtime_state_path()
+        env_variables["SWE_AGENT_REGISTRY_PATH"] = env.get_runtime_registry_path()
+        env_variables["SWE_AGENT_PATCH_PATH"] = env.get_runtime_patch_path()
         env.set_env_variables(env_variables)
-        env.write_file("/root/.swe-agent-env", json.dumps(self.config.registry_variables))
-        env.write_file("/root/state.json", "{}")
+        env.write_file(env.get_runtime_registry_path(), json.dumps(self.config.registry_variables))
+        env.write_file(env.get_runtime_state_path(), "{}")
         env.communicate(" && ".join(self._reset_commands), check="raise", timeout=self.config.install_timeout)
 
     async def _upload_bundles(self, env: SWEEnv) -> None:
+        tools_dir = env.get_runtime_tools_dir()
+        await asyncio.gather(
+            *(
+                env.deployment.runtime.execute(
+                    RexCommand(
+                        command=f"rm -rf {tools_dir}/{bundle.path.name}",
+                        shell=True,
+                        check=True,
+                    )
+                )
+                for bundle in self.config.bundles
+            )
+        )
         await asyncio.gather(
             *(
                 env.deployment.runtime.upload(
-                    UploadRequest(source_path=bundle.path.as_posix(), target_path=f"/root/tools/{bundle.path.name}")
+                    UploadRequest(
+                        source_path=bundle.path.as_posix(),
+                        target_path=f"{tools_dir}/{bundle.path.name}",
+                    )
                 )
                 for bundle in self.config.bundles
             )
@@ -294,14 +313,15 @@ class ToolHandler:
         env.set_env_variables(self.config.env_variables)
         cwd = env.communicate("pwd", check="raise").strip()
         asyncio.run(self._upload_bundles(env))
+        tools_dir = env.get_runtime_tools_dir()
         for bundle in self.config.bundles:
             cmds = [
-                f"export PATH=/root/tools/{bundle.path.name}/bin:$PATH",
-                f"chmod +x /root/tools/{bundle.path.name}/bin/*",
+                f"export PATH={tools_dir}/{bundle.path.name}/bin:$PATH",
+                f"chmod +x {tools_dir}/{bundle.path.name}/bin/*",
             ]
             if (bundle.path / "install.sh").exists():
-                cmds.append(f"cd /root/tools/{bundle.path.name} && source install.sh")
-            cmds.append(f"chmod +x /root/tools/{bundle.path.name}/bin/*")
+                cmds.append(f"cd {tools_dir}/{bundle.path.name} && source install.sh")
+            cmds.append(f"chmod +x {tools_dir}/{bundle.path.name}/bin/*")
             env.communicate(
                 " && ".join(cmds),
                 check="raise",
@@ -317,7 +337,7 @@ class ToolHandler:
     def _get_state(self, env: SWEEnv) -> dict[str, str]:
         """Retrieve the state from the environment"""
         try:
-            state_str = env.read_file("/root/state.json")
+            state_str = env.read_file(env.get_runtime_state_path())
         except FileNotFoundError:
             self.logger.warning("State file not found, returning empty state")
             return {}

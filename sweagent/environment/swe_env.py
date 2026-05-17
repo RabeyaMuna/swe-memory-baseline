@@ -1,12 +1,14 @@
 import asyncio
 import logging
 import shlex
+from pathlib import Path
 from pathlib import PurePath
 from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 from swerex.deployment.abstract import AbstractDeployment
 from swerex.deployment.config import DeploymentConfig, DockerDeploymentConfig, get_deployment
+from swerex.deployment.local import LocalDeployment
 from swerex.runtime.abstract import (
     BashAction,
     BashInterruptAction,
@@ -17,7 +19,7 @@ from swerex.runtime.abstract import (
 from swerex.runtime.abstract import Command as RexCommand
 
 from sweagent.environment.hooks.abstract import CombinedEnvHooks, EnvHook
-from sweagent.environment.repo import Repo, RepoConfig
+from sweagent.environment.repo import Repo, RepoConfig, get_repo_path, get_runtime_home, get_runtime_root
 from sweagent.utils.log import get_logger
 
 
@@ -118,8 +120,12 @@ class SWEEnv:
         if self.repo is None:
             return
 
-        folders = self.communicate(input="ls", check="raise").split("\n")
-        if self.repo.repo_name in folders:
+        repo_path = get_repo_path(self.deployment, self.repo.repo_name)
+        exists = self.communicate(
+            input=f"test -d {shlex.quote(repo_path)} && echo yes || echo no",
+            check="raise",
+        ).strip()
+        if exists == "yes":
             return
 
         self._chook.on_copy_repo_started(repo=self.repo)
@@ -150,10 +156,11 @@ class SWEEnv:
         """Clean repository of any modifications + Checkout base commit"""
         if self.repo is not None:
             self.logger.debug("Resetting repository %s to commit %s", self.repo.repo_name, self.repo.base_commit)
+            repo_path = get_repo_path(self.deployment, self.repo.repo_name)
             # todo: Currently has swe-ft specific change: The original repo.copy isn't called, because the repo is already
             # present. However, reset --hard <BRANCH> also doesn't work. So modified it here to do a checkout instead.
             startup_commands = [
-                f"cd /{self.repo.repo_name}",
+                f"cd {shlex.quote(repo_path)}",
                 "export ROOT=$(pwd -P)",
                 *self.repo.get_reset_commands(),
             ]
@@ -181,13 +188,39 @@ class SWEEnv:
         """
         self._chook.on_start_deployment()
         asyncio.run(self.deployment.start())
+        startup_source = [] if isinstance(self.deployment, LocalDeployment) else ["/root/.bashrc"]
         asyncio.run(
             self.deployment.runtime.create_session(
-                CreateBashSessionRequest(startup_source=["/root/.bashrc"], startup_timeout=10)
+                CreateBashSessionRequest(startup_source=startup_source, startup_timeout=10)
             )
         )
+        runtime_root = get_runtime_root(self.deployment)
+        runtime_home = get_runtime_home(self.deployment)
+        Path(runtime_root).mkdir(parents=True, exist_ok=True)
+        Path(runtime_home).mkdir(parents=True, exist_ok=True)
+        Path(runtime_home, "tools").mkdir(parents=True, exist_ok=True)
         self.set_env_variables({"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "PIP_PROGRESS_BAR": "off", "PAGER": "cat"})
         self.logger.info("Environment Initialized")
+
+    def get_runtime_home(self) -> str:
+        return get_runtime_home(self.deployment)
+
+    def get_runtime_tools_dir(self) -> str:
+        return str(Path(self.get_runtime_home()) / "tools")
+
+    def get_runtime_patch_path(self) -> str:
+        return str(Path(self.get_runtime_home()) / "model.patch")
+
+    def get_runtime_state_path(self) -> str:
+        return str(Path(self.get_runtime_home()) / "state.json")
+
+    def get_runtime_registry_path(self) -> str:
+        return str(Path(self.get_runtime_home()) / ".swe-agent-env")
+
+    def get_repo_path(self) -> str | None:
+        if self.repo is None:
+            return None
+        return get_repo_path(self.deployment, self.repo.repo_name)
 
     def interrupt_session(self):
         self.logger.info("Interrupting session")

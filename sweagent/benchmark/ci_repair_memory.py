@@ -6,6 +6,15 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+REPO_PRESETS: dict[str, list[str]] = {
+    "core_ci_repair": [
+        "agno-agi/agno",
+        "OpenAccess-AI-Collective/axolotl",
+        "conan-io/conan",
+        "flowersteam/flower",
+    ],
+}
+
 
 def _stable_repo_id(row: dict[str, Any]) -> str:
     return f"{row.get('repo_owner', '')}/{row.get('repo_name', '')}".strip("/")
@@ -64,6 +73,9 @@ def normalize_logs(row: dict[str, Any], *, max_chars: int = 7000) -> str:
 
 
 def build_problem_statement(row: dict[str, Any]) -> str:
+    analyzed_doc = str(row.get("ci_problem_document") or "").strip()
+    if analyzed_doc:
+        return analyzed_doc
     repo = _stable_repo_id(row)
     changed_files = row.get("changed_files") or []
     files_block = "\n".join(f"- {f}" for f in changed_files[:20]) if changed_files else "- Unknown"
@@ -74,6 +86,8 @@ def build_problem_statement(row: dict[str, Any]) -> str:
         error_type_text = ", ".join(str(x) for x in error_types if str(x).strip())
     else:
         error_type_text = str(error_types).strip()
+    failed_commands = _extract_failed_commands(logs)
+    commands_block = "\n".join(f"- {cmd}" for cmd in failed_commands[:8]) if failed_commands else "- Unknown"
 
     return (
         "Repair the failing CI workflow for this repository.\n\n"
@@ -83,6 +97,8 @@ def build_problem_statement(row: dict[str, Any]) -> str:
         f"Workflow path: {row.get('workflow_path', '')}\n"
         f"Branch: {row.get('head_branch', '')}\n"
         f"Error type: {error_type_text or 'Unknown'}\n\n"
+        "Failed commands inferred from the CI logs:\n"
+        f"{commands_block}\n\n"
         "Changed files in the failing change:\n"
         f"{files_block}\n\n"
         "Workflow definition:\n"
@@ -126,6 +142,38 @@ def _classify_patch_patterns(diff_text: str) -> list[str]:
     return patterns
 
 
+def _classify_failure_patterns(log_text: str, error_types: list[str], failed_commands: list[str]) -> list[str]:
+    lowered = log_text.lower()
+    patterns: list[str] = []
+    if any("ruff" in cmd.lower() for cmd in failed_commands) or "ruff" in lowered:
+        patterns.append("lint_or_format_failure")
+    if any("pytest" in cmd.lower() for cmd in failed_commands) or "traceback" in lowered:
+        patterns.append("test_or_runtime_failure")
+    if any("mypy" in cmd.lower() for cmd in failed_commands) or "error:" in lowered:
+        patterns.append("type_check_or_static_analysis")
+    if any("import" in err.lower() for err in error_types) or "importerror" in lowered or "f401" in lowered:
+        patterns.append("import_or_symbol_issue")
+    if "whitespace" in lowered or "format" in lowered:
+        patterns.append("formatting_issue")
+    if not patterns:
+        patterns.append("general_ci_failure")
+    return patterns
+
+
+def _infer_failed_tool(failed_commands: list[str], log_text: str) -> str:
+    known_tools = ("ruff", "pytest", "mypy", "black", "isort", "flake8", "pylint", "make", "tox", "nox")
+    lowered_log = log_text.lower()
+    for command in failed_commands:
+        lowered = command.lower()
+        for tool in known_tools:
+            if tool in lowered:
+                return tool
+    for tool in known_tools:
+        if tool in lowered_log:
+            return tool
+    return "unknown"
+
+
 def _extract_failed_commands(log_text: str) -> list[str]:
     commands: list[str] = []
     for line in log_text.splitlines():
@@ -148,9 +196,22 @@ def build_memory_record(row: dict[str, Any]) -> dict[str, Any]:
     log_text = normalize_logs(row, max_chars=4000)
     changed_files = [str(f) for f in (row.get("changed_files") or []) if str(f).strip()]
     patch_files = _diff_files(diff_text)
+    failed_commands = _extract_failed_commands(log_text)
     error_types = row.get("error_type") or []
     if not isinstance(error_types, list):
         error_types = [str(error_types)]
+    ci_structured_context = row.get("ci_structured_context") if isinstance(row.get("ci_structured_context"), dict) else {}
+    structured_effected_files = ci_structured_context.get("effected_files") if isinstance(ci_structured_context, dict) else []
+    if isinstance(structured_effected_files, list):
+        structured_target_files = [
+            str(item.get("file") or "").strip()
+            for item in structured_effected_files
+            if isinstance(item, dict) and str(item.get("file") or "").strip()
+        ]
+    else:
+        structured_target_files = []
+    failed_tool = _infer_failed_tool(failed_commands, log_text)
+    failure_patterns = _classify_failure_patterns(log_text, error_types, failed_commands)
     return {
         "memory_id": build_instance_id(row),
         "repo": _stable_repo_id(row),
@@ -160,14 +221,30 @@ def build_memory_record(row: dict[str, Any]) -> dict[str, Any]:
         "error_types": [str(x).strip() for x in error_types if str(x).strip()],
         "changed_files": changed_files,
         "patch_files": patch_files,
-        "failed_commands": _extract_failed_commands(log_text),
+        "failed_commands": failed_commands,
+        "failed_tool": failed_tool,
         "log_excerpt": log_text[:1200],
         "patch_patterns": _classify_patch_patterns(diff_text),
+        "failure_patterns": failure_patterns,
+        "likely_target_files": structured_target_files[:5] or patch_files[:5] or changed_files[:5],
+        "validation_commands": failed_commands[:4],
+        "overall_failure_reasons": ci_structured_context.get("overall_failure_reasons") if isinstance(ci_structured_context, dict) else [],
+        "mentioned_tokens": ci_structured_context.get("mentioned_tokens") if isinstance(ci_structured_context, dict) else [],
+        "organized_log_summary": str(ci_structured_context.get("organized_log_summary") or "") if isinstance(ci_structured_context, dict) else "",
+        "root_cause_hint": (
+            "Failure resembles "
+            + ", ".join(failure_patterns)
+            + " with tool "
+            + failed_tool
+            + "."
+        ),
         "fix_summary": (
             "Past fix touched files: "
             + ", ".join(patch_files[:5] or changed_files[:5])
             + ". Patch patterns: "
             + ", ".join(_classify_patch_patterns(diff_text))
+            + ". Failed tool: "
+            + failed_tool
         ).strip(),
         "search_text": " ".join(
             [
@@ -175,8 +252,19 @@ def build_memory_record(row: dict[str, Any]) -> dict[str, Any]:
                 str(row.get("workflow_name") or ""),
                 str(row.get("workflow_path") or ""),
                 " ".join(str(x) for x in error_types),
+                " ".join(str(x) for x in (ci_structured_context.get("overall_failure_reasons") or []))
+                if isinstance(ci_structured_context, dict)
+                else "",
+                " ".join(str(x) for x in (ci_structured_context.get("mentioned_tokens") or []))
+                if isinstance(ci_structured_context, dict)
+                else "",
+                str(ci_structured_context.get("organized_log_summary") or "")
+                if isinstance(ci_structured_context, dict)
+                else "",
                 " ".join(changed_files[:10]),
-                " ".join(_extract_failed_commands(log_text)),
+                failed_tool,
+                " ".join(failure_patterns),
+                " ".join(failed_commands),
                 log_text[:800],
             ]
         ),
@@ -227,8 +315,9 @@ def _overlap_ratio(left: list[str], right: list[str]) -> float:
 
 
 def score_memory_match(row: dict[str, Any], memory_record: dict[str, Any]) -> float:
+    current_repo = _stable_repo_id(row)
     score = 0.0
-    if _stable_repo_id(row) == str(memory_record.get("repo") or ""):
+    if current_repo == str(memory_record.get("repo") or ""):
         score += 0.4
 
     row_error_types = row.get("error_type") or []
@@ -241,6 +330,9 @@ def score_memory_match(row: dict[str, Any], memory_record: dict[str, Any]) -> fl
 
     changed_files = [str(f) for f in (row.get("changed_files") or []) if str(f).strip()]
     score += 0.2 * _overlap_ratio(changed_files, memory_record.get("changed_files") or [])
+
+    current_commands = _extract_failed_commands(normalize_logs(row, max_chars=1500))
+    score += 0.1 * _overlap_ratio(current_commands, memory_record.get("failed_commands") or [])
 
     row_tokens = _tokenize(normalize_logs(row, max_chars=1500))
     mem_tokens = _tokenize(str(memory_record.get("search_text") or ""))
@@ -260,11 +352,26 @@ def retrieve_memory(
     min_score: float = 0.15,
 ) -> list[dict[str, Any]]:
     scored: list[dict[str, Any]] = []
+    current_repo = _stable_repo_id(row)
+    current_changed_files = [str(f) for f in (row.get("changed_files") or []) if str(f).strip()]
+    current_error_types = row.get("error_type") or []
+    if not isinstance(current_error_types, list):
+        current_error_types = [str(current_error_types)]
     for record in memory_bank:
         score = score_memory_match(row, record)
         if score < min_score:
             continue
-        scored.append({**record, "retrieval_score": score})
+        if current_repo == str(record.get("repo") or "") and _overlap_ratio(
+            current_changed_files, record.get("changed_files") or []
+        ) > 0:
+            memory_level = "L1"
+        elif current_repo == str(record.get("repo") or "") and _overlap_ratio(
+            current_error_types, record.get("error_types") or []
+        ) > 0:
+            memory_level = "L2"
+        else:
+            memory_level = "L3"
+        scored.append({**record, "retrieval_score": score, "memory_level": memory_level})
     scored.sort(key=lambda item: float(item.get("retrieval_score") or 0.0), reverse=True)
     return scored[:top_k]
 
@@ -272,30 +379,68 @@ def retrieve_memory(
 def render_memory_context(matches: list[dict[str, Any]]) -> str:
     if not matches:
         return ""
-    blocks = [
-        "Retrieved prior CI repair hints. These are non-binding hints, not ground truth. Ignore them if repository evidence disagrees."
-    ]
-    for index, match in enumerate(matches, start=1):
-        blocks.append(
-            "\n".join(
-                [
-                    f"Memory {index} (score={float(match.get('retrieval_score') or 0.0):.2f})",
-                    f"Repo: {match.get('repo', '')}",
-                    f"Workflow: {match.get('workflow_name', '')}",
-                    "Error types: " + ", ".join(match.get("error_types") or []),
-                    "Changed files: " + ", ".join((match.get("changed_files") or [])[:6]),
-                    "Failed commands: " + " | ".join((match.get("failed_commands") or [])[:3]),
-                    "Patch patterns: " + ", ".join(match.get("patch_patterns") or []),
-                    "Reusable fix hint: " + str(match.get("fix_summary") or ""),
-                ]
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for match in matches:
+        grouped[str(match.get("memory_level") or "L3")].append(match)
+
+    header = (
+        "Retrieved prior CI repair memory. This is reusable prior experience only. "
+        "Use it when it agrees with repository evidence, workflow definitions, and failing logs."
+    )
+    sections = [header]
+
+    level_titles = {
+        "L1": "L1 exact-ish prior cases",
+        "L2": "L2 repo-level recurring patterns",
+        "L3": "L3 cross-repo general repair patterns",
+    }
+    for level in ("L1", "L2", "L3"):
+        level_matches = grouped.get(level) or []
+        if not level_matches:
+            continue
+        sections.append(level_titles[level] + ":")
+        for index, match in enumerate(level_matches, start=1):
+            sections.append(
+                "\n".join(
+                    [
+                        f"- Memory {index} score={float(match.get('retrieval_score') or 0.0):.2f} repo={match.get('repo', '')}",
+                        f"  Workflow: {match.get('workflow_name', '')} [{match.get('workflow_path', '')}]",
+                        "  Error types: " + ", ".join(match.get("error_types") or []),
+                        "  Failed tool: " + str(match.get("failed_tool") or "unknown"),
+                        "  Likely target files: " + ", ".join(match.get("likely_target_files") or []),
+                        "  Validation commands: " + " | ".join((match.get("validation_commands") or [])[:3]),
+                        "  Failure patterns: " + ", ".join(match.get("failure_patterns") or []),
+                        "  Patch patterns: " + ", ".join(match.get("patch_patterns") or []),
+                        "  Root-cause hint: " + str(match.get("root_cause_hint") or ""),
+                        "  Reusable fix hint: " + str(match.get("fix_summary") or ""),
+                    ]
+                )
             )
+
+    actionable_lines: list[str] = []
+    best = matches[0]
+    if best.get("likely_target_files"):
+        actionable_lines.append(
+            "Start inspection from: " + ", ".join((best.get("likely_target_files") or [])[:5])
         )
-    return "\n\n".join(blocks)
+    if best.get("validation_commands"):
+        actionable_lines.append(
+            "Try validating with: " + " | ".join((best.get("validation_commands") or [])[:3])
+        )
+    if best.get("patch_patterns"):
+        actionable_lines.append(
+            "Prefer fix shapes like: " + ", ".join(best.get("patch_patterns") or [])
+        )
+    if actionable_lines:
+        sections.append("Actionable guidance:")
+        sections.extend(f"- {line}" for line in actionable_lines)
+    return "\n\n".join(sections)
 
 
 def build_expert_instance(
     row: dict[str, Any],
     *,
+    deployment_type: str = "local",
     deployment_image: str = "python:3.11",
     memory_context: str = "",
 ) -> dict[str, Any]:
@@ -313,10 +458,16 @@ def build_expert_instance(
     }
     return {
         "env": {
-            "deployment": {
-                "type": "docker",
-                "image": deployment_image,
-            },
+            "deployment": (
+                {
+                    "type": "docker",
+                    "image": deployment_image,
+                }
+                if deployment_type == "docker"
+                else {
+                    "type": "local",
+                }
+            ),
             "repo": {
                 "type": "github",
                 "github_url": github_url,
@@ -330,4 +481,3 @@ def build_expert_instance(
             "extra_fields": extra_fields,
         },
     }
-

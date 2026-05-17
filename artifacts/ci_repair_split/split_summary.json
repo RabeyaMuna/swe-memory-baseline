@@ -1,0 +1,15 @@
+{
+  "dataset": "ci-benchmark-user/ci-repair-bench",
+  "split": "train",
+  "repos": [
+    "agno-agi/agno",
+    "OpenAccess-AI-Collective/axolotl",
+    "conan-io/conan",
+    "flowersteam/flower"
+  ],
+  "repo_preset": "core_ci_repair",
+  "memory_ratio": 0.3,
+  "min_memory_per_repo": 5,
+  "memory_seed_count": 33,
+  "eval_count": 79
+}

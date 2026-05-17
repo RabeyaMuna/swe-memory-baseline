@@ -8,6 +8,7 @@ from git import InvalidGitRepositoryError
 from git import Repo as GitRepo
 from pydantic import BaseModel, ConfigDict, Field
 from swerex.deployment.abstract import AbstractDeployment
+from swerex.deployment.local import LocalDeployment
 from swerex.runtime.abstract import Command, UploadRequest
 from typing_extensions import Self
 
@@ -15,6 +16,30 @@ from sweagent.utils.github import _parse_gh_repo_url
 from sweagent.utils.log import get_logger
 
 logger = get_logger("swea-config", emoji="🔧")
+
+
+def uses_local_runtime(deployment: AbstractDeployment) -> bool:
+    return isinstance(deployment, LocalDeployment)
+
+
+def get_runtime_root(deployment: AbstractDeployment) -> str:
+    if uses_local_runtime(deployment):
+        return str((Path.cwd() / ".sweagent_local").resolve())
+    return "/"
+
+
+def get_runtime_home(deployment: AbstractDeployment) -> str:
+    root = get_runtime_root(deployment)
+    if root == "/":
+        return "/root"
+    return str((Path(root) / "root").resolve())
+
+
+def get_repo_path(deployment: AbstractDeployment, repo_name: str) -> str:
+    root = get_runtime_root(deployment)
+    if root == "/":
+        return f"/{repo_name}"
+    return str((Path(root) / repo_name).resolve())
 
 
 class Repo(Protocol):
@@ -108,15 +133,17 @@ class LocalRepoConfig(BaseModel):
 
     def copy(self, deployment: AbstractDeployment):
         self.check_valid_repo()
+        target_path = get_repo_path(deployment, self.repo_name)
         asyncio.run(
-            deployment.runtime.upload(UploadRequest(source_path=str(self.path), target_path=f"/{self.repo_name}"))
+            deployment.runtime.upload(UploadRequest(source_path=str(self.path), target_path=target_path))
         )
-        r = asyncio.run(
-            deployment.runtime.execute(Command(command=f"chown -R root:root /{self.repo_name}", shell=True))
-        )
-        if r.exit_code != 0:
-            msg = f"Failed to change permissions on copied repository (exit code: {r.exit_code}, stdout: {r.stdout}, stderr: {r.stderr})"
-            raise RuntimeError(msg)
+        if not uses_local_runtime(deployment):
+            r = asyncio.run(
+                deployment.runtime.execute(Command(command=f"chown -R root:root {shlex.quote(target_path)}", shell=True))
+            )
+            if r.exit_code != 0:
+                msg = f"Failed to change permissions on copied repository (exit code: {r.exit_code}, stdout: {r.stdout}, stderr: {r.stderr})"
+                raise RuntimeError(msg)
 
     def get_reset_commands(self) -> list[str]:
         """Issued after the copy operation or when the environment is reset."""
@@ -165,16 +192,17 @@ class GithubRepoConfig(BaseModel):
         base_commit = self.base_commit
         github_token = os.getenv("GITHUB_TOKEN", "")
         url = self._get_url_with_token(github_token)
+        repo_path = get_repo_path(deployment, self.repo_name)
         asyncio.run(
             deployment.runtime.execute(
                 Command(
                     command=" && ".join(
                         (
-                            f"mkdir /{self.repo_name}",
-                            f"cd /{self.repo_name}",
+                            f"mkdir -p {shlex.quote(repo_path)}",
+                            f"cd {shlex.quote(repo_path)}",
                             "git init",
                             f"git remote add origin {shlex.quote(url)}",
-                            f"git fetch --depth 1 origin {shlex.quote(base_commit)}",
+                            f"git fetch origin {shlex.quote(base_commit)}",
                             "git checkout FETCH_HEAD",
                             "cd ..",
                         )
@@ -188,7 +216,14 @@ class GithubRepoConfig(BaseModel):
 
     def get_reset_commands(self) -> list[str]:
         """Issued after the copy operation or when the environment is reset."""
-        return _get_git_reset_commands(self.base_commit)
+        return [
+            f"git fetch origin {shlex.quote(self.base_commit)}",
+            "git status",
+            "git restore .",
+            "git reset --hard",
+            "git checkout FETCH_HEAD",
+            "git clean -fdq",
+        ]
 
 
 class SWESmithRepoConfig(BaseModel):
