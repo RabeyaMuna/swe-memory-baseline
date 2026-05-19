@@ -38,6 +38,44 @@ def _coerce_json_rows(path: str | Path) -> list[dict[str, Any]]:
     raise ValueError(msg)
 
 
+def _normalize_str_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    text = str(value or "").strip()
+    return [text] if text else []
+
+
+def normalize_row(row: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(row)
+    if "error_type" not in normalized and "error_types" in normalized:
+        normalized["error_type"] = _normalize_str_list(normalized.get("error_types"))
+    elif "error_type" in normalized:
+        normalized["error_type"] = _normalize_str_list(normalized.get("error_type"))
+
+    changed_files = _normalize_str_list(normalized.get("changed_files"))
+    if not changed_files:
+        changed_files = _normalize_str_list(normalized.get("ground_truth_files"))
+    normalized["changed_files"] = changed_files
+
+    failed_cmd = _normalize_str_list(normalized.get("failed_cmd"))
+    failed_tool = _normalize_str_list(normalized.get("failed_tool"))
+    error_context_summary = str(normalized.get("error_context_summary") or "").strip()
+    logs_summary = str(normalized.get("logs_summary") or "").strip()
+
+    if not normalized.get("ci_structured_context") and (
+        error_context_summary or logs_summary or failed_cmd or failed_tool
+    ):
+        normalized["ci_structured_context"] = {
+            "overall_failure_reasons": [item for item in [error_context_summary, logs_summary] if item],
+            "mentioned_tokens": failed_tool + failed_cmd + changed_files[:10],
+            "organized_log_summary": "\n".join(item for item in [error_context_summary, logs_summary] if item).strip(),
+            "effected_files": [{"file": path} for path in changed_files],
+            "failed_jobs": [{"step": cmd, "failed_command": cmd} for cmd in failed_cmd],
+        }
+
+    return normalized
+
+
 def write_json(path: str | Path, payload: Any) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -53,7 +91,7 @@ def write_jsonl(path: str | Path, rows: list[dict[str, Any]]) -> None:
 
 
 def load_rows(path: str | Path) -> list[dict[str, Any]]:
-    return _coerce_json_rows(path)
+    return [normalize_row(row) for row in _coerce_json_rows(path)]
 
 
 def normalize_logs(row: dict[str, Any], *, max_chars: int = 7000) -> str:
@@ -69,6 +107,12 @@ def normalize_logs(row: dict[str, Any], *, max_chars: int = 7000) -> str:
         prefix = f"[{step_name}]\n" if step_name else ""
         chunks.append(prefix + log_text[:2000])
     text = "\n\n".join(chunks)
+    if not text.strip():
+        fallback_chunks = [
+            str(row.get("error_context_summary") or "").strip(),
+            str(row.get("logs_summary") or "").strip(),
+        ]
+        text = "\n\n".join(item for item in fallback_chunks if item)
     return text[:max_chars]
 
 
@@ -87,6 +131,8 @@ def build_problem_statement(row: dict[str, Any]) -> str:
     else:
         error_type_text = str(error_types).strip()
     failed_commands = _extract_failed_commands(logs)
+    if not failed_commands:
+        failed_commands = _normalize_str_list(row.get("failed_cmd"))
     commands_block = "\n".join(f"- {cmd}" for cmd in failed_commands[:8]) if failed_commands else "- Unknown"
 
     return (

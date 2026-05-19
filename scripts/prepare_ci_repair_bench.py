@@ -40,19 +40,20 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(args.output_dir / "memory_seed_rows.jsonl", seed_rows)
     write_jsonl(args.output_dir / "eval_rows.jsonl", eval_rows)
-    write_json(
-        args.output_dir / "split_summary.json",
-        {
-            "dataset": args.dataset,
-            "split": args.split,
-            "repos": selected_repos,
-            "repo_preset": args.repo_preset,
-            "memory_ratio": args.memory_ratio,
-            "min_memory_per_repo": args.min_memory_per_repo,
-            "memory_seed_count": len(seed_rows),
-            "eval_count": len(eval_rows),
-        },
-    )
+    write_json(args.output_dir / "memory_seed_issues.json", seed_rows)
+    write_json(args.output_dir / "memory_eval_issues.json", eval_rows)
+    summary = {
+        "dataset": args.dataset,
+        "split": args.split,
+        "repos": selected_repos,
+        "repo_preset": args.repo_preset,
+        "memory_ratio": args.memory_ratio,
+        "min_memory_per_repo": args.min_memory_per_repo,
+        "memory_seed_count": len(seed_rows),
+        "eval_count": len(eval_rows),
+    }
+    write_json(args.output_dir / "split_summary.json", summary)
+    write_json(args.output_dir / "summary.json", summary)
 
 
 if __name__ == "__main__":

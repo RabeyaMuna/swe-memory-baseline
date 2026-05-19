@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 from collections import Counter, defaultdict
 from math import sqrt
+import os
+from pathlib import Path
 from typing import Any
 
 from sweagent.benchmark.ci_repair_memory import (
@@ -16,8 +19,10 @@ from sweagent.benchmark.ci_repair_memory import (
 
 
 L1_WEIGHT = 0.60
-L2_WEIGHT = 0.25
-L3_WEIGHT = 0.15
+L2_WEIGHT = 0.30
+L3_WEIGHT = 0.10
+LEVEL_THRESHOLDS = {"L1": 0.30, "L2": 0.40, "L3": 0.50}
+ABLATION_THRESHOLDS = {"L1": 0.55, "L1+L2": 0.37, "L1+L2+L3": 0.33}
 
 
 def _normalize_str_list(value: Any) -> list[str]:
@@ -25,6 +30,53 @@ def _normalize_str_list(value: Any) -> list[str]:
         return [str(item).strip() for item in value if str(item).strip()]
     text = str(value or "").strip()
     return [text] if text else []
+
+
+def _normalize_path(path: str) -> str:
+    return (path or "").strip().lstrip("/").replace("\\", "/")
+
+
+def _basename(path: str) -> str:
+    return os.path.basename(_normalize_path(path))
+
+
+def _repo_key(value: Any) -> str:
+    text = str(value or "").strip().lower().strip("/")
+    if "/" in text:
+        return text.split("/")[-1]
+    return text
+
+
+def _repo_match(left: Any, right: Any) -> bool:
+    left_text = str(left or "").strip().lower().strip("/")
+    right_text = str(right or "").strip().lower().strip("/")
+    if not left_text or not right_text:
+        return False
+    return left_text == right_text or _repo_key(left_text) == _repo_key(right_text)
+
+
+def _active_levels(ablation_levels: str) -> set[str]:
+    levels = {level.strip() for level in str(ablation_levels or "L1+L2+L3").split("+") if level.strip()}
+    return levels or {"L1", "L2", "L3"}
+
+
+def _level_weights(ablation_levels: str) -> dict[str, float]:
+    active_levels = _active_levels(ablation_levels)
+    base = {"L1": L1_WEIGHT, "L2": L2_WEIGHT, "L3": L3_WEIGHT}
+    active_sum = sum(base[level] for level in active_levels if level in base)
+    return {
+        level: (base[level] / active_sum if level in active_levels and active_sum > 0 else 0.0)
+        for level in ("L1", "L2", "L3")
+    }
+
+
+def _global_threshold(ablation_levels: str) -> float:
+    return float(ABLATION_THRESHOLDS.get(str(ablation_levels or "L1+L2+L3"), 0.33))
+
+
+def _first_text(value: Any) -> str:
+    values = _normalize_str_list(value)
+    return values[0] if values else ""
 
 
 def _token_counter(text: str) -> Counter[str]:
@@ -84,8 +136,17 @@ def _current_issue_context(row: dict[str, Any]) -> dict[str, Any]:
     reasons = _normalize_str_list(ci_structured_context.get("overall_failure_reasons") if isinstance(ci_structured_context, dict) else [])
     mentioned_tokens = _normalize_str_list(ci_structured_context.get("mentioned_tokens") if isinstance(ci_structured_context, dict) else [])
     organized_log_summary = str(ci_structured_context.get("organized_log_summary") or "") if isinstance(ci_structured_context, dict) else ""
-    current_commands = _extract_failed_commands(logs)
+    current_commands = _extract_failed_commands(logs) or _normalize_str_list(row.get("failed_cmd"))
     failed_tool = _infer_failed_tool(current_commands, logs)
+    if failed_tool == "unknown":
+        failed_tool = (_normalize_str_list(row.get("failed_tool")) or ["unknown"])[0]
+    failure_reason = " | ".join(reasons[:4]).strip() or organized_log_summary or logs
+    failure_pattern = (
+        _first_text(ci_structured_context.get("overall_error_types") if isinstance(ci_structured_context, dict) else [])
+        or _first_text(row.get("error_type"))
+        or _first_text(row.get("primary_error_type"))
+        or _first_text(row.get("issue_type"))
+    )
     retrieval_document = "\n".join(
         [
             f"repo: {_stable_repo_id(row)}",
@@ -110,6 +171,8 @@ def _current_issue_context(row: dict[str, Any]) -> dict[str, Any]:
         "failed_jobs": failed_job_names,
         "failed_commands": current_commands,
         "failed_tool": failed_tool,
+        "failure_pattern": failure_pattern,
+        "failure_reason": failure_reason,
         "overall_failure_reasons": reasons,
         "mentioned_tokens": mentioned_tokens,
         "organized_log_summary": organized_log_summary,
@@ -264,6 +327,7 @@ def build_l2_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         failure_patterns: list[str] = []
         fix_patterns: list[str] = []
         failed_commands: list[str] = []
+        failed_tools: list[str] = []
         failed_jobs: list[str] = []
         mentioned_tokens: list[str] = []
         reasons: list[str] = []
@@ -276,6 +340,7 @@ def build_l2_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 ("failure_pattern", failure_patterns),
                 ("fix_pattern", fix_patterns),
                 ("failed_commands", failed_commands),
+                ("failed_tool", failed_tools),
                 ("failed_jobs", failed_jobs),
                 ("mentioned_tokens", mentioned_tokens),
             ):
@@ -308,6 +373,7 @@ def build_l2_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "source_count": len(rows),
                 "files": files[:10],
                 "failed_commands": failed_commands,
+                "failed_tool": failed_tools,
                 "failed_jobs": failed_jobs,
                 "failure_patterns": failure_patterns,
                 "fix_patterns": fix_patterns,
@@ -335,6 +401,7 @@ def build_l3_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     for (error_type, failed_tool), rows in grouped.items():
         failure_patterns: list[str] = []
         fix_patterns: list[str] = []
+        failed_tools: list[str] = []
         failed_jobs: list[str] = []
         mentioned_tokens: list[str] = []
         reasons: list[str] = []
@@ -346,6 +413,7 @@ def build_l3_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
             for key, bucket in (
                 ("failure_pattern", failure_patterns),
                 ("fix_pattern", fix_patterns),
+                ("failed_tool", failed_tools),
                 ("failed_jobs", failed_jobs),
                 ("mentioned_tokens", mentioned_tokens),
             ):
@@ -377,6 +445,7 @@ def build_l3_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "repos": repos,
                 "failure_patterns": failure_patterns,
                 "fix_patterns": fix_patterns,
+                "failed_tool_list": failed_tools,
                 "failed_jobs": failed_jobs,
                 "mentioned_tokens": mentioned_tokens,
                 "reasons": reasons,
@@ -394,6 +463,171 @@ def build_l3_memory(l1_records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_hierarchical_memory_bank(seed_rows: list[dict[str, Any]]) -> dict[str, Any]:
     l1 = build_l1_memory(seed_rows)
     return {"l1": l1, "l2": build_l2_memory(l1), "l3": build_l3_memory(l1)}
+
+
+def _external_l1_to_internal(record: dict[str, Any]) -> dict[str, Any]:
+    dependent_files = [
+        item if isinstance(item, dict) else {"file": str(item).strip(), "reason": ""}
+        for item in (record.get("dependent_files") or [])
+        if (isinstance(item, dict) and str(item.get("file") or "").strip()) or str(item).strip()
+    ]
+    failed_tool = _normalize_str_list(record.get("failed_tool"))
+    failure_pattern = _normalize_str_list(record.get("failure_pattern"))
+    fix_pattern = _normalize_str_list(record.get("fix_pattern"))
+    failed_commands = _normalize_str_list(record.get("failed_cmd"))
+    repo = str(record.get("repo_full_name") or record.get("repo") or record.get("repo_name") or "").strip()
+    workflow_name = str(record.get("workflow_name") or "").strip()
+    workflow_path = str(record.get("workflow_path") or "").strip()
+    failure_reason = str(record.get("failure_reason") or record.get("reason") or "").strip()
+    item = {
+        "memory_level": "L1",
+        "memory_id": f"{repo or 'unknown'}::{record.get('issue_id', '')}::{record.get('file', '')}",
+        "issue_memory_id": f"{repo or 'unknown'}-{record.get('issue_id', '')}",
+        "repo": repo,
+        "workflow_name": workflow_name,
+        "workflow_path": workflow_path,
+        "sha_fail": str(record.get("sha_fail") or "").strip(),
+        "file": str(record.get("file") or "").strip(),
+        "error_types": _normalize_str_list(record.get("error_type")),
+        "failure_pattern": failure_pattern,
+        "failed_commands": failed_commands,
+        "failed_jobs": [],
+        "failed_tool": failed_tool[0] if failed_tool else "unknown",
+        "fix_pattern": fix_pattern,
+        "validation_cmd": failed_commands[0] if failed_commands else "",
+        "failure_reason": failure_reason,
+        "dependent_files": dependent_files,
+        "mentioned_tokens": failed_tool + failure_pattern + fix_pattern,
+        "organized_log_summary": failure_reason,
+        "overall_failure_reasons": [failure_reason] if failure_reason else [],
+        "fix_summary": str(record.get("fix_strategy") or "").strip(),
+    }
+    item["retrieval_document"] = _build_l1_retrieval_document(item)
+    return item
+
+
+def _external_l2_to_internal(record: dict[str, Any]) -> dict[str, Any]:
+    failed_commands = _normalize_str_list(record.get("failed_cmd"))
+    failed_tool = _normalize_str_list(record.get("failed_tool"))
+    failure_patterns = _normalize_str_list(record.get("failure_pattern"))
+    fix_patterns = _normalize_str_list(record.get("fix_pattern"))
+    reasons = _normalize_str_list(record.get("failure_reason"))
+    files = [
+        {
+            "file": str(item.get("file") or "").strip(),
+            "reason": str(item.get("failure_reason") or item.get("reason") or "").strip(),
+        }
+        for item in (record.get("files") or [])
+        if isinstance(item, dict) and str(item.get("file") or "").strip()
+    ]
+    repo = str(record.get("repo_full_name") or record.get("repo") or record.get("repo_name") or "").strip()
+    workflow_name = str(record.get("workflow_name") or "").strip()
+    workflow_path = str(record.get("workflow_path") or "").strip()
+    retrieval_document = "\n".join(
+        [
+            f"repo: {repo}",
+            f"workflow: {workflow_name} [{workflow_path}]",
+            f"error_type: {str(record.get('error_type') or '').strip()}",
+            f"common_failed_commands: {' | '.join(failed_commands[:5])}",
+            f"common_files: {', '.join(item['file'] for item in files[:8])}",
+            f"failure_reasons: {' '.join(reasons[:5])}",
+            f"failure_patterns: {', '.join(failure_patterns[:8])}",
+            f"fix_patterns: {', '.join(fix_patterns[:8])}",
+        ]
+    ).strip()
+    return {
+        "memory_level": "L2",
+        "repo": repo,
+        "workflow_name": workflow_name,
+        "workflow_path": workflow_path,
+        "error_type": str(record.get("error_type") or "").strip(),
+        "source_count": len(_normalize_str_list(record.get("issue_ids"))) or 1,
+        "files": files,
+        "failed_commands": failed_commands,
+        "failed_tool": failed_tool,
+        "failed_jobs": [],
+        "failure_patterns": failure_patterns,
+        "fix_patterns": fix_patterns,
+        "reasons": reasons,
+        "mentioned_tokens": failed_tool + failure_patterns + fix_patterns,
+        "retrieval_document": retrieval_document,
+        "fix_summary": str(record.get("fix_strategy") or "").strip(),
+    }
+
+
+def _external_l3_to_internal(record: dict[str, Any]) -> dict[str, Any]:
+    failed_tool = _normalize_str_list(record.get("failed_tool"))
+    failure_patterns = _normalize_str_list(record.get("failure_patterns") or record.get("failure_pattern"))
+    fix_patterns = _normalize_str_list(record.get("fix_pattern"))
+    reasons = _normalize_str_list(record.get("failure_reasons") or record.get("failure_reason"))
+    repos = _normalize_str_list(record.get("repos") or record.get("repo"))
+    retrieval_document = "\n".join(
+        [
+            f"error_type: {str(record.get('error_type') or '').strip()}",
+            f"failed_tool: {failed_tool[0] if failed_tool else 'unknown'}",
+            f"repos: {', '.join(repos[:10])}",
+            f"failure_reasons: {' '.join(reasons[:5])}",
+            f"failure_patterns: {', '.join(failure_patterns[:8])}",
+            f"fix_patterns: {', '.join(fix_patterns[:8])}",
+        ]
+    ).strip()
+    return {
+        "memory_level": "L3",
+        "error_type": str(record.get("error_type") or "").strip(),
+        "failed_tool": failed_tool[0] if failed_tool else "unknown",
+        "source_count": 1,
+        "repos": repos,
+        "failure_patterns": failure_patterns,
+        "fix_patterns": fix_patterns,
+        "failed_tool_list": failed_tool,
+        "failed_jobs": [],
+        "mentioned_tokens": failed_tool + failure_patterns + fix_patterns,
+        "reasons": reasons,
+        "retrieval_document": retrieval_document,
+        "fix_summary": str(record.get("principle") or record.get("fix_strategy") or "").strip(),
+    }
+
+
+def load_memory_bank(path: str | Path) -> dict[str, Any]:
+    path = Path(path)
+    if path.is_dir() or path.name in {"memory_bank_summary.json", "failure_memory.json", "repo_memory.json", "cross_memory.json"}:
+        base_dir = path if path.is_dir() else path.parent
+        failure_path = base_dir / "failure_memory.json"
+        repo_path = base_dir / "repo_memory.json"
+        cross_path = base_dir / "cross_memory.json"
+        if failure_path.exists() and repo_path.exists() and cross_path.exists():
+            return {
+                "l1": [_external_l1_to_internal(item) for item in json.loads(failure_path.read_text())],
+                "l2": [_external_l2_to_internal(item) for item in json.loads(repo_path.read_text())],
+                "l3": [_external_l3_to_internal(item) for item in json.loads(cross_path.read_text())],
+            }
+    data = json.loads(path.read_text())
+    if isinstance(data, dict) and {"l1", "l2", "l3"} & set(data):
+        return data
+    msg = f"Unsupported memory bank format: {path}"
+    raise ValueError(msg)
+
+
+def summarize_hierarchical_memory_bank(
+    memory_bank: dict[str, Any],
+    *,
+    seed_file: str | None = None,
+    analysis_file: str | None = None,
+    model_key: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "model_key": model_key or "heuristic",
+        "seed_file": seed_file or "",
+        "analysis_file": analysis_file or "",
+        "total_issues": len({str(item.get("issue_memory_id") or "") for item in (memory_bank.get("l1") or []) if str(item.get("issue_memory_id") or "")}),
+        "processed": len({str(item.get("issue_memory_id") or "") for item in (memory_bank.get("l1") or []) if str(item.get("issue_memory_id") or "")}),
+        "skipped": 0,
+        "memory_counts": {
+            "L1_failure_memory": len(memory_bank.get("l1") or []),
+            "L2_repo_memory": len(memory_bank.get("l2") or []),
+            "L3_cross_memory": len(memory_bank.get("l3") or []),
+        },
+    }
 
 
 def _workflow_similarity(current: dict[str, Any], record: dict[str, Any]) -> float:
@@ -468,67 +702,174 @@ def _annotate_match(record: dict[str, Any], *, score: float, score_breakdown: di
 
 
 def _score_l1(current: dict[str, Any], record: dict[str, Any]) -> dict[str, Any] | None:
-    if current["repo"] != str(record.get("repo") or ""):
+    if not _repo_match(current["repo"], record.get("repo")):
         return None
-    file_overlap = _file_pattern_similarity(current, record)
-    error_type_match = _error_type_similarity(current, record)
-    text_similarity = _text_similarity(current, record)
-    failed_job_match = _failed_job_similarity(current, record)
-    failure_reason_similarity = _failure_reason_similarity(current, record)
+    query_files = list(current.get("affected_files") or []) + list(current.get("changed_files") or [])
+    normalized_query_files = {_normalize_path(path) for path in query_files if str(path).strip()}
+    query_basenames = {_basename(path) for path in normalized_query_files}
+    row_file = _normalize_path(str(record.get("file") or ""))
+    row_base = _basename(row_file)
+    if row_file and row_file in normalized_query_files:
+        file_score = 1.0
+    elif row_base and row_base in query_basenames:
+        file_score = 0.7
+    else:
+        file_score = 0.0
+    row_error = _first_text(record.get("error_types")).lower()
+    current_error = _first_text(current.get("error_types")).lower()
+    error_score = 1.0 if current_error and row_error and current_error == row_error else 0.0
+    row_pattern = _first_text(record.get("failure_pattern")).lower()
+    current_pattern = str(current.get("failure_pattern") or "").lower()
+    pattern_score = (
+        1.0
+        if current_pattern and row_pattern and current_pattern == row_pattern
+        else _cosine_similarity(current_pattern, row_pattern)
+    )
+    query_tools = [str(current.get("failed_tool") or "").lower()] if str(current.get("failed_tool") or "").strip() else []
+    row_tools = [str(record.get("failed_tool") or "").lower()] if str(record.get("failed_tool") or "").strip() else []
+    tool_score = _overlap_ratio(query_tools, row_tools)
+    query_doc = " ".join(
+        [
+            _first_text(current.get("error_types")),
+            str(current.get("failure_pattern") or ""),
+            str(current.get("failure_reason") or ""),
+            " ".join(query_tools),
+            " ".join(query_files),
+        ]
+    )
+    row_doc = " ".join(
+        [
+            _first_text(record.get("error_types")),
+            _first_text(record.get("failure_pattern")),
+            str(record.get("failure_reason") or ""),
+            " ".join(row_tools),
+            row_file,
+        ]
+    )
+    text_score = _cosine_similarity(query_doc, row_doc)
     score_breakdown = {
-        "file_overlap": 0.30 * file_overlap,
-        "error_type_match": 0.20 * error_type_match,
-        "text_similarity": 0.20 * text_similarity,
-        "failed_job_match": 0.15 * failed_job_match,
-        "failure_reason_similarity": 0.15 * failure_reason_similarity,
+        "file_score": 0.35 * file_score,
+        "error_score": 0.20 * error_score,
+        "pattern_score": 0.15 * pattern_score,
+        "tool_score": 0.10 * tool_score,
+        "text_score": 0.20 * text_score,
     }
+    similarity = round(sum(score_breakdown.values()), 4)
+    if similarity < LEVEL_THRESHOLDS["L1"]:
+        return None
     return _annotate_match(
         record,
-        score=sum(score_breakdown.values()),
+        score=similarity,
         score_breakdown=score_breakdown,
-        rationale="L1 direct match uses same-repo file overlap, error type overlap, failed-job overlap, text similarity, and failure-reason similarity.",
+        rationale="L1 direct match uses file, error type, failure pattern, tool, and text similarity with the external baseline weights.",
     )
 
 
 def _score_l2(current: dict[str, Any], record: dict[str, Any]) -> dict[str, Any] | None:
-    if current["repo"] != str(record.get("repo") or ""):
+    if not _repo_match(current["repo"], record.get("repo")):
         return None
-    cosine_similarity = _cosine_similarity(current["retrieval_document"], str(record.get("retrieval_document") or ""))
-    workflow_similarity = _workflow_similarity(current, record)
-    error_type_match = _error_type_similarity(current, record)
-    text_similarity = _text_similarity(current, record)
-    file_pattern_similarity = _file_pattern_similarity(current, record)
+    row_error = str(record.get("error_type") or _first_text(record.get("error_types"))).lower()
+    current_error = _first_text(current.get("error_types")).lower()
+    error_score = 1.0 if current_error and row_error and current_error == row_error else 0.0
+    row_pattern = _first_text(record.get("failure_patterns") or record.get("failure_pattern")).lower()
+    current_pattern = str(current.get("failure_pattern") or "").lower()
+    pattern_score = (
+        1.0
+        if current_pattern and row_pattern and current_pattern == row_pattern
+        else _cosine_similarity(current_pattern, row_pattern)
+    )
+    query_tools = [str(current.get("failed_tool") or "").lower()] if str(current.get("failed_tool") or "").strip() else []
+    row_tools = [str(item).lower() for item in _normalize_str_list(record.get("failed_tool"))]
+    if not row_tools:
+        row_tools = [str(item).lower() for item in _normalize_str_list(record.get("failed_commands"))]
+    tool_score = _overlap_ratio(query_tools, row_tools)
+    query_doc = " ".join(
+        [
+            _first_text(current.get("error_types")),
+            str(current.get("failure_pattern") or ""),
+            str(current.get("failure_reason") or ""),
+            " ".join(query_tools),
+            " ".join(list(current.get("affected_files") or []) + list(current.get("changed_files") or [])),
+        ]
+    )
+    row_doc = " ".join(
+        [
+            str(record.get("error_type") or ""),
+            row_pattern,
+            " ".join(_normalize_str_list(record.get("reasons"))),
+            " ".join(_normalize_str_list(record.get("fix_patterns"))),
+            " ".join(row_tools),
+            " ".join(
+                str(item.get("file") or "")
+                for item in (record.get("files") or [])
+                if isinstance(item, dict)
+            ),
+        ]
+    )
+    text_score = _cosine_similarity(query_doc, row_doc)
     score_breakdown = {
-        "cosine_similarity": 0.45 * cosine_similarity,
-        "workflow_similarity": 0.20 * workflow_similarity,
-        "error_type_match": 0.15 * error_type_match,
-        "text_similarity": 0.10 * text_similarity,
-        "file_pattern_similarity": 0.10 * file_pattern_similarity,
+        "text_score": 0.45 * text_score,
+        "error_score": 0.25 * error_score,
+        "pattern_score": 0.15 * pattern_score,
+        "tool_score": 0.15 * tool_score,
     }
+    similarity = round(sum(score_breakdown.values()), 4)
+    if similarity < LEVEL_THRESHOLDS["L2"]:
+        return None
     return _annotate_match(
         record,
-        score=sum(score_breakdown.values()),
+        score=similarity,
         score_breakdown=score_breakdown,
-        rationale="L2 repo-level match uses cosine-heavy semantic similarity within the same repo, then reranks with workflow, error type, text, and file-pattern similarity.",
+        rationale="L2 repo-level match uses the external baseline text, error type, pattern, and tool weights.",
     )
 
 
 def _score_l3(current: dict[str, Any], record: dict[str, Any]) -> dict[str, Any]:
-    cosine_similarity = _cosine_similarity(current["retrieval_document"], str(record.get("retrieval_document") or ""))
-    error_type_match = _error_type_similarity(current, record)
-    tool_similarity = 1.0 if str(record.get("failed_tool") or "") == str(current.get("failed_tool") or "") else 0.0
-    text_similarity = _text_similarity(current, record)
+    row_error = str(record.get("error_type") or _first_text(record.get("error_types"))).lower()
+    current_error = _first_text(current.get("error_types")).lower()
+    error_type_match = 1.0 if current_error and row_error and current_error == row_error else 0.0
+    row_pattern = _first_text(record.get("failure_patterns") or record.get("failure_pattern")).lower()
+    current_pattern = str(current.get("failure_pattern") or "").lower()
+    pattern_score = (
+        1.0
+        if current_pattern and row_pattern and current_pattern == row_pattern
+        else _cosine_similarity(current_pattern, row_pattern)
+    )
+    query_tools = [str(current.get("failed_tool") or "").lower()] if str(current.get("failed_tool") or "").strip() else []
+    row_tools = [str(item).lower() for item in _normalize_str_list(record.get("failed_tool_list") or record.get("failed_tool"))]
+    tool_similarity = _overlap_ratio(query_tools, row_tools)
+    query_doc = " ".join(
+        [
+            _first_text(current.get("error_types")),
+            str(current.get("failure_pattern") or ""),
+            str(current.get("failure_reason") or ""),
+            " ".join(query_tools),
+        ]
+    )
+    row_doc = " ".join(
+        [
+            str(record.get("error_type") or ""),
+            row_pattern,
+            " ".join(_normalize_str_list(record.get("reasons"))),
+            " ".join(_normalize_str_list(record.get("fix_patterns"))),
+            " ".join(row_tools),
+        ]
+    )
+    text_similarity = _cosine_similarity(query_doc, row_doc)
     score_breakdown = {
-        "cosine_similarity": 0.55 * cosine_similarity,
+        "text_score": 0.55 * text_similarity,
         "error_type_match": 0.20 * error_type_match,
-        "tool_similarity": 0.15 * tool_similarity,
-        "text_similarity": 0.10 * text_similarity,
+        "pattern_score": 0.15 * pattern_score,
+        "tool_similarity": 0.10 * tool_similarity,
     }
+    similarity = round(sum(score_breakdown.values()), 4)
+    if similarity < LEVEL_THRESHOLDS["L3"]:
+        return None
     return _annotate_match(
         record,
-        score=sum(score_breakdown.values()),
+        score=similarity,
         score_breakdown=score_breakdown,
-        rationale="L3 cross-repo match uses cosine-heavy semantic similarity across repos, plus error type, tool, and text similarity.",
+        rationale="L3 cross-repo match uses the external baseline text, error type, pattern, and tool weights.",
     )
 
 
@@ -537,65 +878,105 @@ def retrieve_hierarchical_memory(
     memory_bank: dict[str, Any],
     *,
     top_k_l1: int = 3,
-    min_l1: float = 0.15,
-    min_l2: float = 0.20,
-    min_l3: float = 0.20,
+    ablation_levels: str = "L1+L2+L3",
 ) -> dict[str, Any]:
     current = _current_issue_context(row)
-    l1_candidates = []
+    active_levels = _active_levels(ablation_levels)
+    level_weights = _level_weights(ablation_levels)
+    similarity_threshold = _global_threshold(ablation_levels)
+
+    l1_matches: list[dict[str, Any]] = []
     issue_id = f"{row.get('repo_owner', '')}__{row.get('repo_name', '')}-{row.get('id', '')}"
-    for record in memory_bank.get("l1") or []:
-        if str(record.get("issue_memory_id") or "") == issue_id:
-            continue
-        match = _score_l1(current, record)
-        if match and float(match.get("similarity_score") or 0.0) >= min_l1:
-            match["memory_level"] = "L1"
-            l1_candidates.append(match)
-    l1_candidates.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
-    l1_candidates = l1_candidates[:top_k_l1]
+    if "L1" in active_levels:
+        for record in memory_bank.get("l1") or []:
+            if str(record.get("issue_memory_id") or "") == issue_id:
+                continue
+            match = _score_l1(current, record)
+            if match:
+                match["memory_level"] = "L1"
+                l1_matches.append(match)
+        l1_matches.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
+        l1_matches = l1_matches[:top_k_l1]
 
-    l2_candidates = []
-    for record in memory_bank.get("l2") or []:
-        match = _score_l2(current, record)
-        if match and float(match.get("similarity_score") or 0.0) >= min_l2:
-            match["memory_level"] = "L2"
-            l2_candidates.append(match)
-    l2_candidates.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
-    l2_candidate = l2_candidates[0] if l2_candidates else None
+    l2_matches: list[dict[str, Any]] = []
+    if "L2" in active_levels:
+        for record in memory_bank.get("l2") or []:
+            match = _score_l2(current, record)
+            if match:
+                match["memory_level"] = "L2"
+                l2_matches.append(match)
+        l2_matches.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
+        l2_matches = l2_matches[:top_k_l1]
 
-    l3_candidates = []
-    for record in memory_bank.get("l3") or []:
-        match = _score_l3(current, record)
-        if float(match.get("similarity_score") or 0.0) >= min_l3:
-            match["memory_level"] = "L3"
-            l3_candidates.append(match)
-    l3_candidates.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
-    l3_candidate = l3_candidates[0] if l3_candidates else None
+    l3_matches: list[dict[str, Any]] = []
+    if "L3" in active_levels:
+        for record in memory_bank.get("l3") or []:
+            match = _score_l3(current, record)
+            if match:
+                match["memory_level"] = "L3"
+                l3_matches.append(match)
+        l3_matches.sort(key=lambda item: float(item.get("similarity_score") or 0.0), reverse=True)
+        l3_matches = l3_matches[:top_k_l1]
 
     level_scores = {
-        "L1": max((float(item.get("similarity_score") or 0.0) for item in l1_candidates), default=0.0),
-        "L2": float(l2_candidate.get("similarity_score") or 0.0) if l2_candidate else 0.0,
-        "L3": float(l3_candidate.get("similarity_score") or 0.0) if l3_candidate else 0.0,
+        "L1": round(max((float(item.get("similarity_score") or 0.0) for item in l1_matches), default=0.0), 4),
+        "L2": round(max((float(item.get("similarity_score") or 0.0) for item in l2_matches), default=0.0), 4),
+        "L3": round(max((float(item.get("similarity_score") or 0.0) for item in l3_matches), default=0.0), 4),
     }
     weighted_similarity = round(
-        L1_WEIGHT * level_scores["L1"] + L2_WEIGHT * level_scores["L2"] + L3_WEIGHT * level_scores["L3"], 4
+        sum(level_weights[level] * level_scores[level] for level in ("L1", "L2", "L3")),
+        4,
     )
-    selected_levels = [level for level, score in level_scores.items() if score > 0.0]
-    llm_similarity_candidates = l1_candidates[:3]
-    if l2_candidate:
-        llm_similarity_candidates.append(l2_candidate)
-    if l3_candidate:
-        llm_similarity_candidates.append(l3_candidate)
+    selected_levels = [
+        level
+        for level, rows in (("L1", l1_matches), ("L2", l2_matches), ("L3", l3_matches))
+        if rows and level_scores.get(level, 0.0) >= LEVEL_THRESHOLDS[level]
+    ]
+
+    candidate_files: list[str] = []
+    for item in l1_matches:
+        path = _normalize_path(str(item.get("file") or ""))
+        if path and path not in candidate_files:
+            candidate_files.append(path)
+    for item in l2_matches:
+        for file_row in (item.get("files") or [])[:5]:
+            if isinstance(file_row, dict):
+                path = _normalize_path(str(file_row.get("file") or ""))
+                if path and path not in candidate_files:
+                    candidate_files.append(path)
+
+    high_level_hints: list[str] = []
+    for item in l2_matches:
+        reason = _first_text(item.get("reasons"))
+        if reason:
+            high_level_hints.append(reason[:220])
+    for item in l3_matches:
+        principle = str(item.get("fix_summary") or "").strip()
+        if principle:
+            high_level_hints.append(principle[:220])
+
+    use_memory = weighted_similarity >= similarity_threshold
     return {
         "current_issue_context": current,
-        "l1_candidates": l1_candidates,
-        "l2_candidate": l2_candidate,
-        "l3_candidate": l3_candidate,
+        "thresholds": {"similarity_threshold": similarity_threshold, **LEVEL_THRESHOLDS},
+        "weights": level_weights,
+        "l1_candidates": l1_matches,
+        "l2_candidate": l2_matches[0] if l2_matches else None,
+        "l3_candidate": l3_matches[0] if l3_matches else None,
+        "l1_matches": l1_matches,
+        "l2_matches": l2_matches,
+        "l3_matches": l3_matches,
         "level_scores": level_scores,
         "weighted_similarity": weighted_similarity,
         "selected_memory_levels": selected_levels,
-        "llm_similarity_candidates": llm_similarity_candidates,
-        "use_memory": weighted_similarity > 0.0,
+        "llm_similarity_candidates": [*l1_matches[:3], *l2_matches[:1], *l3_matches[:1]],
+        "candidate_files": candidate_files[:10],
+        "high_level_hints": high_level_hints[:6],
+        "matches": [*l1_matches, *l2_matches, *l3_matches],
+        "reason": "" if use_memory else "below_weighted_threshold",
+        "use_memory": use_memory,
+        "enabled": bool(memory_bank),
+        "ablation_levels": ablation_levels,
     }
 
 
@@ -603,9 +984,23 @@ def render_hierarchical_memory_context(result: dict[str, Any]) -> str:
     if not result.get("use_memory"):
         return ""
     current = result.get("current_issue_context") or {}
+    thresholds = result.get("thresholds") or {}
+    weights = result.get("weights") or {}
     lines = [
         "Retrieved prior CI repair memory. Use it as non-binding prior experience only.",
+        f"Ablation levels: {result.get('ablation_levels', 'L1+L2+L3')}",
         f"Weighted similarity: {float(result.get('weighted_similarity') or 0.0):.2f}",
+        "Weights: "
+        + ", ".join(f"{level}={float(weights.get(level) or 0.0):.3f}" for level in ("L1", "L2", "L3")),
+        "Thresholds: "
+        + ", ".join(
+            [
+                f"weighted={float(thresholds.get('similarity_threshold') or 0.0):.2f}",
+                f"L1={float(thresholds.get('L1') or 0.0):.2f}",
+                f"L2={float(thresholds.get('L2') or 0.0):.2f}",
+                f"L3={float(thresholds.get('L3') or 0.0):.2f}",
+            ]
+        ),
         "Current issue summary:",
         f"- Repo: {current.get('repo', '')}",
         f"- Workflow: {current.get('workflow_name', '')} [{current.get('workflow_path', '')}]",
@@ -613,7 +1008,7 @@ def render_hierarchical_memory_context(result: dict[str, Any]) -> str:
         f"- Failed jobs: {', '.join(current.get('failed_jobs') or [])}",
         f"- Affected files: {', '.join((current.get('affected_files') or current.get('changed_files') or [])[:6])}",
     ]
-    for candidate in result.get("l1_candidates") or []:
+    for candidate in result.get("l1_matches") or []:
         dependent_files = ", ".join(
             str(item.get("file") or "")
             for item in (candidate.get("dependent_files") or [])
@@ -636,8 +1031,7 @@ def render_hierarchical_memory_context(result: dict[str, Any]) -> str:
                 f"- Fix summary: {candidate.get('fix_summary', '')}",
             ]
         )
-    l2 = result.get("l2_candidate")
-    if l2:
+    for l2 in result.get("l2_matches") or []:
         lines.extend(
             [
                 "",
@@ -651,8 +1045,7 @@ def render_hierarchical_memory_context(result: dict[str, Any]) -> str:
                 f"- Fix summary: {l2.get('fix_summary', '')}",
             ]
         )
-    l3 = result.get("l3_candidate")
-    if l3:
+    for l3 in result.get("l3_matches") or []:
         lines.extend(
             [
                 "",
