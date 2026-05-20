@@ -1,0 +1,3514 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://swe-agent.com/latest/README_COMPREHENSIVE/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>SWE-Memory Baseline for CI Repair: Complete Guide - SWE-agent documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+  
+  
+  
+  
+  <style>:root{--md-annotation-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M22%2012a10%2010%200%200%201-10%2010A10%2010%200%200%201%202%2012%2010%2010%200%200%201%2012%202a10%2010%200%200%201%2010%2010m-12%206%206-6-6-6-1.4%201.4%204.6%204.6-4.6%204.6z%22/%3E%3C/svg%3E');}</style>
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    
+      <link rel="stylesheet" href="../assets/navigation_cards.css">
+    
+      <link rel="stylesheet" href="../assets/custom.css">
+    
+      <link rel="stylesheet" href="../assets/mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/image_theme.css">
+    
+      <link rel="stylesheet" href="../assets/bubbles.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-SG2NC1GDRD"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-SG2NC1GDRD",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-SG2NC1GDRD",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#swe-memory-baseline-for-ci-repair-complete-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+        <aside class="md-banner">
+          <div class="md-banner__inner md-grid md-typeset">
+            
+              <button class="md-banner__button md-icon" aria-label="Don't show this again">
+                
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+              </button>
+            
+            
+📣 We now recommend <a href="https://mini-swe-agent.com">mini-swe-agent</a> instead of SWE-agent: Same performance, much more simple &amp; flexible
+
+          </div>
+          
+            <script>var el=document.querySelector("[data-md-component=announce]");if(el){var content=el.querySelector(".md-typeset");__md_hash(content.innerHTML)===__md_get("__announce")&&(el.hidden=!0)}</script>
+          
+        </aside>
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden="">
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SWE-agent documentation" class="md-header__button md-logo" aria-label="SWE-agent documentation" data-md-component="logo">
+      
+  <img src="../assets/swe-agent.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SWE-agent documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SWE-Memory Baseline for CI Repair: Complete Guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="deep-orange" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="deep-orange" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/SWE-agent/SWE-agent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    SWE-agent/SWE-agent
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href=".." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../usage/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  User Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SWE-agent documentation" class="md-nav__button md-logo" aria-label="SWE-agent documentation" data-md-component="logo">
+      
+  <img src="../assets/swe-agent.svg" alt="logo">
+
+    </a>
+    SWE-agent documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/SWE-agent/SWE-agent" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    SWE-agent/SWE-agent
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href=".." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../installation/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1_2" id="__nav_1_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    From source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/codespaces/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    In browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/keys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models and keys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1.0 migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/tips/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_3">
+        
+          
+          <label class="md-nav__link" for="__nav_1_3" id="__nav_1_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Tutorials
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/hello_world/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hello world
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/cl_tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line basics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/coding_challenges/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solving coding challenges
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/inspector/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trajectory inspector
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/batch_mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Batch mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/competitive_runs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Competitive runs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/adding_custom_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adding custom tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/whats_next/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    What's next?
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../usage/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guides
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../background/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Project overview
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Project overview
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../background/aci/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command line interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/trajectories/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_5">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../config/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuration
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Config files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/templates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/demonstrations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Demonstrations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/environments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6">
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contribution guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/formatting_conflicts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting conflicts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3">
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../reference/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_3" id="__nav_3_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2">
+        
+          
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run config
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Run config
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/run_single_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run single
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/run_batch_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run batch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instance config
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Instance config
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/problem_statements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Problem statements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/repo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Repository
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/batch_instances/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Batch instances
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4">
+        
+          
+          <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent config
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Agent config
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/agent_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/model_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Model config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/template_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Templates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/tools_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/history_processor_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    History processors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/parsers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Action parsers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/env_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/bundle_config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tool bundle config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_7">
+        
+          
+          <label class="md-nav__link" for="__nav_3_7" id="__nav_3_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Classes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agent class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/env/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#quick-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Quick Navigation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📋 What's Included
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📋 What's Included">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core System
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-minute-quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🚀 5-Minute Quick Start
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔍 Understanding the System
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔍 Understanding the System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#memory-hierarchy-3-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory Hierarchy (3 Levels)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory Hierarchy (3 Levels)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#l1-file-level-fixes-weight-60" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L1: File-Level Fixes (Weight: 60%)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l2-repository-level-patterns-weight-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L2: Repository-Level Patterns (Weight: 30%)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#l3-cross-repository-patterns-weight-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        L3: Cross-Repository Patterns (Weight: 10%)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-End Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Components
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-benchmark" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Running the Benchmark
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Running the Benchmark">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-1-automated-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 1: Automated (Recommended)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-2-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option 2: Step-by-Step
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker-cicd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐳 Docker &amp; CI/CD
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🐳 Docker &amp; CI/CD">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#quick-docker-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Docker Run
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#github-actions-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub Actions Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gitlab-ci-jenkins-other" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitLab CI / Jenkins / Other
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📈 Output Files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ablation-studies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧪 Ablation Studies
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔬 Understanding Results
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔬 Understanding Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sample-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample Output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metrics-to-track" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics to Track
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🛠️ Troubleshooting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📚 Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works-very-high-level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎓 How It Works (Very High-Level)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contributing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤝 Contributing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#citation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📄 Citation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📜 License
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#faq" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🤔 FAQ
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+
+                  
+
+
+  
+    <a href="https://github.com/SWE-agent/SWE-agent/edit/main/docs/README_COMPREHENSIVE.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"></path></svg>
+    </a>
+  
+  
+
+
+<h1 id="swe-memory-baseline-for-ci-repair-complete-guide">SWE-Memory Baseline for CI Repair: Complete Guide</h1>
+<p>This repository implements a <strong>hierarchical memory retrieval system</strong> for CI repair using SWE-agent. The system evaluates whether adding context from previously-solved CI failures improves a SWE-agent's ability to fix new CI failures.</p>
+<p><strong>Key Research Question</strong>: <em>Does adding CI-aware retrieval memory improve SWE-agent's performance on recurring CI failures?</em></p>
+<h2 id="quick-navigation">🎯 Quick Navigation</h2>
+<ul>
+<li><strong>Getting Started</strong>: See <a href="docs/SETUP_GUIDE.md">docs/SETUP_GUIDE.md</a> for installation and local execution</li>
+<li><strong>Algorithm Details</strong>: See <a href="docs/ALGORITHM.md">docs/ALGORITHM.md</a> for high-level overview of 3-level memory hierarchy</li>
+<li><strong>CI/CD Integration</strong>: See <a href="docs/CI_INTEGRATION.md">docs/CI_INTEGRATION.md</a> for GitHub Actions, GitLab CI, and Docker setup</li>
+<li><strong>Environment Config</strong>: Copy <code>.env.example</code> to <code>.env</code> and customize for your system</li>
+</ul>
+<h2 id="whats-included">📋 What's Included</h2>
+<h3 id="core-system">Core System</h3>
+<div class="highlight"><pre><span></span><code>sweagent/benchmark/
+├── ci_memory_plugin.py         # Memory retrieval &amp; ranking (L1, L2, L3)
+├── ci_repair_memory.py         # Memory bank construction
+├── ci_problem_document.py      # CI artifact analysis
+└── path_config.py              # Dynamic path resolution
+</code></pre></div>
+<h3 id="pipeline-scripts">Pipeline Scripts</h3>
+<div class="highlight"><pre><span></span><code>scripts/
+├── prepare_ci_repair_bench.py          # ① Split dataset into seed/eval
+├── build_ci_problem_documents.py       # ② Analyze CI logs + workflows
+├── build_ci_repair_memory_bank.py      # ③ Build L1, L2, L3 memory
+├── build_ci_repair_instances.py        # ④ Create agent instances
+└── run_full_benchmark.sh               # Automated end-to-end pipeline
+</code></pre></div>
+<h3 id="configuration">Configuration</h3>
+<div class="highlight"><pre><span></span><code>config/benchmarks/
+└── ci_repair_memory.yaml       # SWE-agent prompt template with memory injection
+
+.env.example                     # Environment variables (paths, API keys, config)
+</code></pre></div>
+<h3 id="documentation">Documentation</h3>
+<div class="highlight"><pre><span></span><code>docs/
+├── ALGORITHM.md                 # High-level algorithm explanation
+├── SETUP_GUIDE.md              # Local setup and execution
+└── CI_INTEGRATION.md           # CI/CD pipeline integration
+</code></pre></div>
+<h2 id="5-minute-quick-start">🚀 5-Minute Quick Start</h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Setup</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/RabeyaMuna/swe-memory-baseline.git
+<span class="nb">cd</span><span class="w"> </span>swe-memory-baseline
+python3.11<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">source</span><span class="w"> </span>venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">".[dev]"</span>
+
+<span class="c1"># 2. Configure (set your API key)</span>
+cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Edit .env - add OPENAI_API_KEY or MINIMAX_API_KEY</span>
+
+<span class="c1"># 3. Run benchmark</span>
+bash<span class="w"> </span>scripts/run_full_benchmark.sh
+
+<span class="c1"># Results: artifacts/ci_repair_split/benchmark_results.json</span>
+</code></pre></div>
+<p><strong>Expected Runtime</strong>: 2-12 hours (depending on eval set size and API limits)</p>
+<h2 id="understanding-the-system">🔍 Understanding the System</h2>
+<h3 id="memory-hierarchy-3-levels">Memory Hierarchy (3 Levels)</h3>
+<p>The system uses a <strong>hierarchical memory</strong> with decreasing specificity:</p>
+<h4 id="l1-file-level-fixes-weight-60"><strong>L1: File-Level Fixes</strong> (Weight: 60%)</h4>
+<ul>
+<li><strong>Specificity</strong>: High (exact file + error type)</li>
+<li><strong>Content</strong>: Specific repairs that fixed identical issues before</li>
+<li><strong>Example</strong>: "When ruff reports F401 unused import in <code>src/models.py</code>, remove the import line"</li>
+<li><strong>Retrieval</strong>: Cosine/Jaccard similarity on error + workflow + file context</li>
+</ul>
+<h4 id="l2-repository-level-patterns-weight-30"><strong>L2: Repository-Level Patterns</strong> (Weight: 30%)</h4>
+<ul>
+<li><strong>Specificity</strong>: Medium (same repo + workflow + error type)</li>
+<li><strong>Content</strong>: Common patterns for recurring issues in a repo</li>
+<li><strong>Example</strong>: "In huggingface/diffusers CI tests, import errors typically require fixing <code>__init__.py</code>"</li>
+<li><strong>Retrieval</strong>: Aggregate L1 matches by <code>(repo, workflow, error_type)</code></li>
+</ul>
+<h4 id="l3-cross-repository-patterns-weight-10"><strong>L3: Cross-Repository Patterns</strong> (Weight: 10%)</h4>
+<ul>
+<li><strong>Specificity</strong>: Low (generalizable across repos)</li>
+<li><strong>Content</strong>: General patterns that work across repositories</li>
+<li><strong>Example</strong>: "Ruff F401 errors are usually fixed by removing imports (75% of cases)"</li>
+<li><strong>Retrieval</strong>: Aggregate L1 matches by <code>(error_type, failed_tool)</code></li>
+</ul>
+<h3 id="end-to-end-pipeline">End-to-End Pipeline</h3>
+<div class="highlight"><pre><span></span><code>┌─────────────────────────────────────────────┐
+│ CI Repair Benchmark (HuggingFace Dataset)   │
+└──────────────────┬──────────────────────────┘
+                   │
+        ┌──────────┴──────────┐
+        ↓                     ↓
+    SEED 30%             EVAL 70%
+    (for memory)         (for testing)
+        │                     │
+        ↓                     ↓
+   Analyze CI Artifacts  Analyze CI Artifacts
+   (extract context)     (extract context)
+        │                     │
+        └──────────┬──────────┘
+                   ↓
+         Build Memory Bank
+         ├─ L1: File-level
+         ├─ L2: Repo-level
+         └─ L3: Cross-repo
+                   │
+        ┌──────────┴──────────┐
+        ↓                     ↓
+   BASELINE RUN         MEMORY RUN
+   (no memory)          (with retrieval)
+        │                     │
+        ├─ Create instances   ├─ Retrieve matches
+        ├─ Run SWE-agent      ├─ Inject memory
+        └─ Measure success    └─ Run SWE-agent
+                              └─ Measure success
+                   │
+                   ↓
+            EVALUATE RESULTS
+            Compare success rates
+</code></pre></div>
+<h3 id="key-components">Key Components</h3>
+<p><strong>1. Memory Building</strong> (<code>build_ci_repair_memory_bank.py</code>)
+- Takes seed rows (30% of dataset, stratified by repo)
+- Extracts features: error types, failed commands, affected files, patch patterns
+- Builds L1 records (one per affected file per failure)
+- Aggregates L1 into L2 (repo-level) and L3 (cross-repo)
+- Outputs: <code>memory_bank.json</code> with ~1000s L1, ~100s L2, ~50s L3 records</p>
+<p><strong>2. Memory Retrieval</strong> (<code>ci_memory_plugin.py</code>)
+- Extracts context from new issue
+- Scores against all L1, L2, L3 records using:
+  - Cosine similarity: tokenized context overlap
+  - Jaccard similarity: token set overlap
+- Selects top matches above thresholds (L1: 0.30, L2: 0.40, L3: 0.50)
+- Renders matches into plain text for prompt injection</p>
+<p><strong>3. Prompt Injection</strong> (<code>config/benchmarks/ci_repair_memory.yaml</code>)
+- Memory context injected into agent's <code>instance_template</code>
+- Agent sees: problem statement + retrieved memory context
+- Agent is instructed to use memory as "non-binding hints only"
+- Allows comparison: baseline (no memory) vs. augmented (with memory)</p>
+<p><strong>4. Evaluation</strong>
+- Success metric: Did agent fix the CI failure?
+- Comparison: <code>memory_success_rate - baseline_success_rate = improvement</code>
+- Additional metrics: Retrieved match quality, ablation studies (L1 vs L1+L2 vs L1+L2+L3)</p>
+<h2 id="configuration_1">🔧 Configuration</h2>
+<p>All paths and settings are configurable via environment variables. See <code>.env.example</code> for complete list:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Key variables</span>
+<span class="nv">BENCHMARK_WORK_DIR</span><span class="o">=</span>./artifacts<span class="w">                    </span><span class="c1"># Output directory</span>
+<span class="nv">CI_BENCHMARK_DATASET</span><span class="o">=</span>ci-benchmark-user/ci-repair-bench
+<span class="nv">CI_MEMORY_SEED_RATIO</span><span class="o">=</span><span class="m">0</span>.3<span class="w">                          </span><span class="c1"># Seed split %</span>
+<span class="nv">MEMORY_ABLATION_LEVELS</span><span class="o">=</span>L1+L2+L3<span class="w">                   </span><span class="c1"># Which levels to use</span>
+<span class="nv">MEMORY_TOP_K</span><span class="o">=</span><span class="m">3</span><span class="w">                                    </span><span class="c1"># Top-K L1 matches</span>
+<span class="nv">CI_ARTIFACT_ANALYSIS_MODEL</span><span class="o">=</span>gpt-4o-mini<span class="w">           </span><span class="c1"># For analyzing logs</span>
+<span class="nv">AGENT_MODEL</span><span class="o">=</span>gpt-4o-mini<span class="w">                          </span><span class="c1"># For repairs</span>
+<span class="nv">DEPLOYMENT_TYPE</span><span class="o">=</span><span class="nb">local</span><span class="w">                            </span><span class="c1"># local or docker</span>
+<span class="nv">CI_MODE</span><span class="o">=</span><span class="nb">true</span><span class="w">                                     </span><span class="c1"># Disable interactive</span>
+</code></pre></div>
+<p><strong>Dynamic Path Support</strong>:
+- All scripts resolve paths relative to <code>SWE_AGENT_CONFIG_ROOT</code>
+- Use <code>~</code> for home directory, <code>./</code> for relative, <code>/</code> for absolute
+- Paths are environment-variable-aware: <code>${VAR_NAME}</code></p>
+<h2 id="running-the-benchmark">📊 Running the Benchmark</h2>
+<h3 id="option-1-automated-recommended">Option 1: Automated (Recommended)</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># One command runs everything</span>
+bash<span class="w"> </span>scripts/run_full_benchmark.sh
+</code></pre></div>
+<h3 id="option-2-step-by-step">Option 2: Step-by-Step</h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># 1. Prepare dataset</span>
+python<span class="w"> </span>scripts/prepare_ci_repair_bench.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>artifacts/ci_repair_split
+
+<span class="c1"># 2. Analyze CI artifacts</span>
+python<span class="w"> </span>scripts/build_ci_problem_documents.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input-file<span class="w"> </span>artifacts/ci_repair_split/memory_seed_rows.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/memory_seed_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>heuristic
+
+python<span class="w"> </span>scripts/build_ci_problem_documents.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--input-file<span class="w"> </span>artifacts/ci_repair_split/eval_rows.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/eval_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--mode<span class="w"> </span>heuristic
+
+<span class="c1"># 3. Build memory</span>
+python<span class="w"> </span>scripts/build_ci_repair_memory_bank.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--seed-file<span class="w"> </span>artifacts/ci_repair_split/memory_seed_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/memory_bank.json
+
+<span class="c1"># 4. Create instances</span>
+python<span class="w"> </span>scripts/build_ci_repair_instances.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--eval-file<span class="w"> </span>artifacts/ci_repair_split/eval_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/instances_baseline.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-mode<span class="w"> </span>baseline
+
+python<span class="w"> </span>scripts/build_ci_repair_instances.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--eval-file<span class="w"> </span>artifacts/ci_repair_split/eval_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/instances_memory.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-mode<span class="w"> </span>memory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-bank<span class="w"> </span>artifacts/ci_repair_split/memory_bank.json
+
+<span class="c1"># 5. Run agents</span>
+sweagent<span class="w"> </span>run<span class="w"> </span>batch<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config-file<span class="w"> </span>config/benchmarks/ci_repair_memory.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--instances-file<span class="w"> </span>artifacts/ci_repair_split/instances_baseline.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>artifacts/ci_repair_split/runs/baseline
+
+sweagent<span class="w"> </span>run<span class="w"> </span>batch<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config-file<span class="w"> </span>config/benchmarks/ci_repair_memory.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--instances-file<span class="w"> </span>artifacts/ci_repair_split/instances_memory.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>artifacts/ci_repair_split/runs/memory
+
+<span class="c1"># 6. Compare results</span>
+python<span class="w"> </span>scripts/evaluate_benchmark.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--baseline-dir<span class="w"> </span>artifacts/ci_repair_split/runs/baseline<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-dir<span class="w"> </span>artifacts/ci_repair_split/runs/memory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-report<span class="w"> </span>artifacts/ci_repair_split/benchmark_results.json
+</code></pre></div>
+<h2 id="docker-cicd">🐳 Docker &amp; CI/CD</h2>
+<h3 id="quick-docker-run">Quick Docker Run</h3>
+<div class="highlight"><pre><span></span><code>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>swe-memory-ci-repair:latest<span class="w"> </span>.
+docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-e<span class="w"> </span><span class="nv">MINIMAX_API_KEY</span><span class="o">=</span><span class="nv">$MINIMAX_API_KEY</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/artifacts:/workspace/artifacts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>swe-memory-ci-repair:latest<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>bash<span class="w"> </span>scripts/run_full_benchmark.sh
+</code></pre></div>
+<h3 id="github-actions-integration">GitHub Actions Integration</h3>
+<p>See <a href="docs/CI_INTEGRATION.md">docs/CI_INTEGRATION.md</a> for complete GitHub Actions workflow that:
+- Runs on schedule or manual trigger
+- Uploads results as artifacts
+- Comments on PRs with results
+- Compares baseline vs. memory metrics</p>
+<h3 id="gitlab-ci-jenkins-other">GitLab CI / Jenkins / Other</h3>
+<p>All scripts use environment variables and support any CI/CD platform. Key requirements:
+- Python 3.11+
+- API keys for LLM (OpenAI, MiniMax, etc.)
+- Disk space for artifacts
+- Network access to HuggingFace, GitHub</p>
+<h2 id="output-files">📈 Output Files</h2>
+<p>After running the benchmark, you'll have:</p>
+<div class="highlight"><pre><span></span><code>artifacts/ci_repair_split/
+├── memory_seed_rows.jsonl              # Original seed data
+├── memory_seed_analyzed.jsonl          # Seed + extracted CI context
+├── eval_rows.jsonl                     # Original eval data
+├── eval_analyzed.jsonl                 # Eval + extracted CI context
+├── memory_bank.json                    # L1, L2, L3 hierarchical memory
+├── instances_baseline.json             # Instances without memory
+├── instances_memory.json               # Instances with memory context injected
+├── retrieval_report.json               # Per-instance retrieval statistics
+├── runs/
+│   ├── baseline/                       # Agent execution logs (baseline)
+│   │   ├── *.md                        # Trajectories
+│   │   └── *.info.json                 # Summary (success/failure)
+│   └── memory/                         # Agent execution logs (memory)
+│       ├── *.md                        # Trajectories  
+│       └── *.info.json                 # Summary (success/failure)
+└── benchmark_results.json              # Final comparison (success rates, improvement)
+</code></pre></div>
+<h2 id="ablation-studies">🧪 Ablation Studies</h2>
+<p>Test different memory configurations:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># L1 only (file-level specificity)</span>
+python<span class="w"> </span>scripts/build_ci_repair_instances.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--eval-file<span class="w"> </span>artifacts/ci_repair_split/eval_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/instances_l1.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-mode<span class="w"> </span>memory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-bank<span class="w"> </span>artifacts/ci_repair_split/memory_bank.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ablation-levels<span class="w"> </span>L1
+
+<span class="c1"># L1+L2 (add repo-level patterns)</span>
+python<span class="w"> </span>scripts/build_ci_repair_instances.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--eval-file<span class="w"> </span>artifacts/ci_repair_split/eval_analyzed.jsonl<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-file<span class="w"> </span>artifacts/ci_repair_split/instances_l1l2.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-mode<span class="w"> </span>memory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--memory-bank<span class="w"> </span>artifacts/ci_repair_split/memory_bank.json<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--ablation-levels<span class="w"> </span>L1+L2
+
+<span class="c1"># Full: L1+L2+L3 (all levels, default)</span>
+<span class="c1"># (already covered above)</span>
+</code></pre></div>
+<h2 id="understanding-results">🔬 Understanding Results</h2>
+<h3 id="sample-output">Sample Output</h3>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"baseline_success"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"baseline_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"baseline_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">30.0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"memory_success"</span><span class="p">:</span><span class="w"> </span><span class="mi">62</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"memory_total"</span><span class="p">:</span><span class="w"> </span><span class="mi">150</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"memory_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">41.3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"improvement_rate"</span><span class="p">:</span><span class="w"> </span><span class="mf">11.3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"ablation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L1+L2+L3"</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><strong>Interpretation</strong>:
+- Baseline: 30% of issues fixed without memory
+- With Memory: 41.3% of issues fixed
+- Improvement: +11.3 percentage points
+- This means memory helped fix an additional 17 issues out of 150 (11.3%)</p>
+<h3 id="metrics-to-track">Metrics to Track</h3>
+<ul>
+<li><strong>Success Rate</strong>: % of CI issues fixed</li>
+<li><strong>Improvement</strong>: Absolute gain from memory</li>
+<li><strong>Retrieval Hit Rate</strong>: % of issues where memory matches were found</li>
+<li><strong>Ablation Sensitivity</strong>: How much each level (L1, L2, L3) contributes</li>
+</ul>
+<h2 id="troubleshooting">🛠️ Troubleshooting</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ImportError: cannot import name 'build_hierarchical_memory_bank'</code></td>
+<td>Run <code>pip install -e .</code> in repo</td>
+</tr>
+<tr>
+<td><code>API rate limit exceeded</code></td>
+<td>Use <code>CI_ANALYSIS_MODE=heuristic</code> or add delays</td>
+</tr>
+<tr>
+<td><code>HuggingFace auth error</code></td>
+<td>Run <code>huggingface-cli login</code> or set <code>HF_TOKEN</code> env var</td>
+</tr>
+<tr>
+<td><code>Out of memory</code></td>
+<td>Reduce eval set size or use smaller model</td>
+</tr>
+<tr>
+<td><code>Hardcoded path not found</code></td>
+<td>Set <code>BENCHMARK_WORK_DIR</code> and <code>SWE_AGENT_CONFIG_ROOT</code> env vars</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="docs/SETUP_GUIDE.md">docs/SETUP_GUIDE.md</a> for more troubleshooting.</p>
+<h2 id="documentation_1">📚 Documentation</h2>
+<ul>
+<li><strong><a href="docs/ALGORITHM.md">ALGORITHM.md</a></strong>: Deep dive into the 3-level memory hierarchy, retrieval algorithm, similarity metrics</li>
+<li><strong><a href="docs/SETUP_GUIDE.md">SETUP_GUIDE.md</a></strong>: Step-by-step local setup, configuration, and execution</li>
+<li><strong><a href="docs/CI_INTEGRATION.md">CI_INTEGRATION.md</a></strong>: GitHub Actions, Docker, and other CI/CD integration</li>
+</ul>
+<h2 id="how-it-works-very-high-level">🎓 How It Works (Very High-Level)</h2>
+<ol>
+<li>
+<p><strong>Memory Construction</strong>: Analyze 30% of benchmark data, extract features (error type, affected files, fix patterns), build hierarchical memory (L1 specific, L2 repo-level, L3 general)</p>
+</li>
+<li>
+<p><strong>Memory Retrieval</strong>: For each new CI issue, compute similarity against all memory records using semantic matching</p>
+</li>
+<li>
+<p><strong>Prompt Injection</strong>: Inject top-ranked memories into the agent's prompt, instructing it to use them as non-binding hints</p>
+</li>
+<li>
+<p><strong>Agent Execution</strong>: Run SWE-agent (with and without memory) on the remaining 70% of data</p>
+</li>
+<li>
+<p><strong>Evaluation</strong>: Compare success rates and measure memory's contribution</p>
+</li>
+</ol>
+<h2 id="contributing">🤝 Contributing</h2>
+<p>To extend or improve this system:</p>
+<ol>
+<li><strong>Add new retrieval strategies</strong>: Modify <code>ci_memory_plugin.py</code></li>
+<li><strong>Improve memory construction</strong>: Edit <code>ci_memory_plugin.py</code> (L1/L2/L3 building)</li>
+<li><strong>Adjust similarity metrics</strong>: Tune <code>_cosine_similarity</code>, <code>_jaccard_text_similarity</code></li>
+<li><strong>Test different ablations</strong>: Use <code>--ablation-levels</code> flag in <code>build_ci_repair_instances.py</code></li>
+<li><strong>Integrate custom models</strong>: Use any LLM via LiteLLM in <code>build_ci_problem_documents.py</code></li>
+</ol>
+<h2 id="citation">📄 Citation</h2>
+<p>If you use this system in your research, please cite:</p>
+<div class="highlight"><pre><span></span><code><span class="nc">@article</span><span class="p">{</span><span class="nl">swe-memory-baseline</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{SWE-Memory: Hierarchical Memory for CI Repair}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2024}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="license">📜 License</h2>
+<p>See <a href="LICENSE">LICENSE</a> for details.</p>
+<h2 id="faq">🤔 FAQ</h2>
+<p><strong>Q: Does this modify SWE-agent's core loop?</strong><br>
+A: No. Memory is purely injected as additional context in the prompt. The agent's action space and decision-making remain unchanged.</p>
+<p><strong>Q: How long does the full pipeline take?</strong><br>
+A: Typically 2-12 hours depending on eval set size and API rate limits. Memory building is fast (&lt;1 min). Agent execution is the bottleneck (1-5 min per issue × N issues).</p>
+<p><strong>Q: Can I run this in my CI/CD pipeline?</strong><br>
+A: Yes! See <a href="docs/CI_INTEGRATION.md">docs/CI_INTEGRATION.md</a> for GitHub Actions, GitLab CI, and Docker examples.</p>
+<p><strong>Q: Can I customize the memory levels?</strong><br>
+A: Yes! Use <code>--ablation-levels</code> to test L1 only, L1+L2, or L1+L2+L3. Adjust weights and thresholds in code or via environment variables.</p>
+<p><strong>Q: What LLMs are supported?</strong><br>
+A: Any LLM supported by LiteLLM: OpenAI, Anthropic, MiniMax, local models via Ollama, etc.</p>
+<p><strong>Q: How does this compare to other memory/retrieval systems?</strong><br>
+A: This uses a domain-specific (CI repair) 3-level hierarchy rather than generic vector retrieval. L1 is specific, L2 is repo-level, L3 is general. This reflects the structure of CI failures.</p>
+<hr>
+<p><strong>For support</strong>: Open an issue or check existing documentation.</p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+
+
+<div id="maintenance-popup-overlay" style="
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+">
+  <div style="
+    background: var(--md-default-bg-color, #fff);
+    color: var(--md-default-fg-color, #333);
+    border-radius: 12px;
+    padding: 2.5rem 2rem 2rem;
+    max-width: 800px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    font-family: var(--md-text-font-family);
+  ">
+    <div style="font-size: 0.92rem; line-height: 1.6; margin: 0 0 1.8rem;">
+      <p style="margin: 0 0 0.4rem;">SWE-agent has been superseded by <strong>mini-swe-agent</strong>.</p>
+      <p style="margin: 0 0 0.4rem;">mini-swe-agent is simpler &amp; more flexible while still being as performant.</p>
+      <p style="margin: 0;">See the <a href="https://mini-swe-agent.com/latest/faq/">FAQ</a> for more details about why you should switch.
+      <br>SWE-agent is now in maintenance-only mode.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+      <a href="https://mini-swe-agent.com" style="
+        display: inline-block;
+        padding: 0.6rem 1.4rem;
+        border-radius: 6px;
+        background: #0099ff;
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.88rem;
+        transition: background 0.2s;
+      " onmouseover="this.style.background='#007acc'" onmouseout="this.style.background='#0099ff'">
+        Check out mini-swe-agent
+      </a>
+      <button onclick="dismissMaintenancePopup()" style="
+        padding: 0.6rem 1.4rem;
+        border-radius: 6px;
+        background: transparent;
+        border: 1px solid var(--md-default-fg-color--lighter, #ccc);
+        color: var(--md-default-fg-color, #333);
+        cursor: pointer;
+        font-size: 0.88rem;
+        transition: background 0.2s;
+      " onmouseover="this.style.background='var(--md-code-bg-color, #eee)'" onmouseout="this.style.background='transparent'">
+        Continue to SWE-agent
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function dismissMaintenancePopup() {
+  document.getElementById('maintenance-popup-overlay').style.display = 'none';
+  sessionStorage.setItem('maintenance-popup-dismissed', '1');
+}
+
+(function() {
+  if (!sessionStorage.getItem('maintenance-popup-dismissed')) {
+    var overlay = document.getElementById('maintenance-popup-overlay');
+    overlay.style.display = 'flex';
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) dismissMaintenancePopup();
+    });
+  }
+})();
+</script>
+
+<!-- Floating Bubbles -->
+<div class="floating-bubbles">
+<div class="floating-bubbles-title">Our projects</div>
+  <a href="https://mini-swe-agent.com/" class="bubble" title="Mini-SWE-Agent">
+    <img src="../assets/mini_logo.svg" alt="Mini-SWE-Agent">
+    <span class="bubble-tooltip">Mini-SWE-Agent</span>
+  </a>
+  <a href="https://swe-rex.com/" class="bubble" title="SWE-rex">
+    <img src="../assets/swerex_logo.svg" alt="SWE-rex">
+    <span class="bubble-tooltip">SWE-ReX</span>
+  </a>
+  <a href="https://swesmith.com" class="bubble" title="SWE-smith">
+    <img src="../assets/swesmith_logo.png" alt="SWE-smith">
+    <span class="bubble-tooltip">SWE-smith</span>
+  </a>
+  <a href="https://swebench.com" class="bubble" title="SWE-bench">
+    <img src="../assets/swebench_logo.png" alt="SWE-bench">
+    <span class="bubble-tooltip">SWE-bench</span>
+  </a>
+  <a href="https://www.swebench.com/sb-cli/" class="bubble" title="sb-cli">
+    <img src="../assets/sbcli_logo.svg" alt="sb-cli">
+    <span class="bubble-tooltip">sb-cli</span>
+  </a>
+</div>
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.indexes", "navigation.top", "content.action.edit", "navigation.footer", "content.code.copy", "content.footnote.tooltips", "header.autohide", "announce.dismiss", "content.code.annotate", "navigation.tabs", "navigation.tabs.sticky"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../assets/js/sh-annotation.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html><!-- Maintenance mode popup -->
