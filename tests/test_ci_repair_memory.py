@@ -345,17 +345,19 @@ def test_build_instances_script_supports_external_eval_and_memory_files(tmp_path
     assert report[0]["thresholds"]["similarity_threshold"] == 0.33
 
 
-def test_hierarchical_memory_bank_summary_matches_compatibility_shape() -> None:
+def test_hierarchical_memory_bank_summary_matches_compatibility_shape(tmp_path) -> None:
     rows = [
         _row("agno-agi", "agno", "1", "sha1", "src/app.py"),
         _row("agno-agi", "agno", "2", "sha2", "src/other.py"),
         _row("flowersteam", "flower", "3", "sha3", "src/flwr/app.py"),
     ]
     bank = build_hierarchical_memory_bank(rows)
+    seed_file = tmp_path / "memory_seed_issues.json"
+    analysis_file = tmp_path / "seed_log_details.json"
     summary = summarize_hierarchical_memory_bank(
         bank,
-        seed_file="/tmp/memory_seed_issues.json",
-        analysis_file="/tmp/seed_log_details.json",
+        seed_file=str(seed_file),
+        analysis_file=str(analysis_file),
         model_key="heuristic",
     )
     assert summary["model_key"] == "heuristic"

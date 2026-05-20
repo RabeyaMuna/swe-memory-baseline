@@ -21,8 +21,34 @@ from sweagent.benchmark.ci_repair_memory import (
 L1_WEIGHT = 0.60
 L2_WEIGHT = 0.30
 L3_WEIGHT = 0.10
-LEVEL_THRESHOLDS = {"L1": 0.30, "L2": 0.40, "L3": 0.50}
+LEVEL_THRESHOLDS = {"L1": 0.40, "L2": 0.40, "L3": 0.50}  # Updated: L1 from 0.30 to 0.40
 ABLATION_THRESHOLDS = {"L1": 0.55, "L1+L2": 0.37, "L1+L2+L3": 0.33}
+
+# Component-based scoring weights (Signal breakdown per level)
+# Each component contributes to the final similarity score
+COMPONENT_WEIGHTS = {
+    "L1": {  # File-level: exact matches most important
+        "file_match": 0.35,      # Exact file match
+        "error_match": 0.20,     # Error type match
+        "pattern_similarity": 0.15,  # Failure pattern cosine similarity
+        "tool_overlap": 0.10,    # Failed tool Jaccard overlap
+        "reason_similarity": 0.20,   # Failure reason TF-IDF cosine similarity
+    },
+    "L2": {  # Repo-level: broader context matters
+        "file_match": 0.0,       # Not applicable at repo level
+        "error_match": 0.25,     # Error type match
+        "pattern_similarity": 0.15,  # Failure pattern
+        "tool_overlap": 0.15,    # Tool patterns
+        "reason_similarity": 0.45,   # Failure reason most important
+    },
+    "L3": {  # Cross-repo: high quality evidence required
+        "file_match": 0.0,       # Not applicable at cross-repo level
+        "error_match": 0.20,     # Error type match
+        "pattern_similarity": 0.15,  # Pattern consistency
+        "tool_overlap": 0.10,    # Tool consistency
+        "reason_similarity": 0.55,   # Failure reason text dominates
+    },
+}
 
 
 def _normalize_str_list(value: Any) -> list[str]:
@@ -104,6 +130,131 @@ def _jaccard_text_similarity(left_text: str, right_text: str) -> float:
     if not left_tokens or not right_tokens:
         return 0.0
     return len(left_tokens & right_tokens) / len(left_tokens | right_tokens)
+
+
+def _tfidf_cosine_similarity(left_text: str, right_text: str) -> float:
+    """
+    TF-IDF style similarity: emphasize rare/distinguishing tokens.
+    Uses token frequency inverse document frequency weighting.
+    """
+    left_tokens = _tokenize(left_text)
+    right_tokens = _tokenize(right_text)
+    if not left_tokens or not right_tokens:
+        return 0.0
+    
+    # Combine all tokens for IDF calculation
+    all_tokens = left_tokens | right_tokens
+    doc_freq = {}
+    for token in all_tokens:
+        doc_freq[token] = (1 if token in left_tokens else 0) + (1 if token in right_tokens else 0)
+    
+    # IDF weight (rarer tokens get higher weight)
+    idf_weights = {token: 1.0 / doc_freq[token] for token in all_tokens if doc_freq[token] > 0}
+    
+    # Weighted TF vectors
+    left_weighted = {token: idf_weights.get(token, 0) for token in left_tokens}
+    right_weighted = {token: idf_weights.get(token, 0) for token in right_tokens}
+    
+    # Cosine similarity with IDF weights
+    numerator = sum(
+        left_weighted.get(token, 0) * right_weighted.get(token, 0)
+        for token in left_tokens & right_tokens
+    )
+    if numerator == 0:
+        return 0.0
+    
+    left_norm = sqrt(sum(v * v for v in left_weighted.values()))
+    right_norm = sqrt(sum(v * v for v in right_weighted.values()))
+    
+    if left_norm == 0 or right_norm == 0:
+        return 0.0
+    
+    return numerator / (left_norm * right_norm)
+
+
+def _exact_match_score(query_val: Any, record_val: Any) -> float:
+    """Return 1.0 for exact match, 0.0 otherwise."""
+    if query_val is None or record_val is None:
+        return 0.0
+    return 1.0 if str(query_val).strip().lower() == str(record_val).strip().lower() else 0.0
+
+
+def _component_based_similarity(
+    query_context: dict[str, Any],
+    record: dict[str, Any],
+    level: str,
+) -> float:
+    """
+    Compute component-based similarity score.
+    
+    Components:
+    - file_match: Exact file path match (L1 only)
+    - error_match: Error type overlap
+    - pattern_similarity: Failure pattern cosine similarity
+    - tool_overlap: Failed tool Jaccard overlap
+    - reason_similarity: Failure reason TF-IDF cosine similarity
+    
+    Each level weights components differently.
+    """
+    if level not in COMPONENT_WEIGHTS:
+        return 0.0
+    
+    weights = COMPONENT_WEIGHTS[level]
+    component_scores = {}
+    
+    # File match (exact, L1 only)
+    if weights["file_match"] > 0:
+        query_files = set(f.lower().strip() for f in query_context.get("changed_files", []))
+        record_file = str(record.get("file", "")).lower().strip()
+        component_scores["file_match"] = 1.0 if record_file in query_files else 0.0
+    else:
+        component_scores["file_match"] = 0.0
+    
+    # Error type match
+    if weights["error_match"] > 0:
+        query_errors = set(str(e).lower() for e in query_context.get("error_types", []))
+        record_errors = set(str(e).lower() for e in (record.get("error_types") or []))
+        if query_errors and record_errors:
+            component_scores["error_match"] = len(query_errors & record_errors) / len(query_errors | record_errors)
+        else:
+            component_scores["error_match"] = 0.0
+    else:
+        component_scores["error_match"] = 0.0
+    
+    # Pattern similarity (cosine on failure patterns)
+    if weights["pattern_similarity"] > 0:
+        query_patterns = " ".join(query_context.get("failure_patterns", []))
+        record_patterns = " ".join(record.get("failure_pattern") or [])
+        component_scores["pattern_similarity"] = _cosine_similarity(query_patterns, record_patterns)
+    else:
+        component_scores["pattern_similarity"] = 0.0
+    
+    # Tool overlap (Jaccard on failed tools)
+    if weights["tool_overlap"] > 0:
+        query_tools = set(str(t).lower() for t in [query_context.get("failed_tool", "")])
+        record_tools = set(str(t).lower() for t in ([record.get("failed_tool", "")] if record.get("failed_tool") else []))
+        if query_tools and record_tools:
+            component_scores["tool_overlap"] = len(query_tools & record_tools) / len(query_tools | record_tools)
+        else:
+            component_scores["tool_overlap"] = 0.0
+    else:
+        component_scores["tool_overlap"] = 0.0
+    
+    # Reason similarity (TF-IDF on failure reason text)
+    if weights["reason_similarity"] > 0:
+        query_reason = query_context.get("failure_reason", "")
+        record_reason = record.get("failure_reason", "")
+        component_scores["reason_similarity"] = _tfidf_cosine_similarity(query_reason, record_reason)
+    else:
+        component_scores["reason_similarity"] = 0.0
+    
+    # Weighted sum
+    final_score = sum(
+        component_scores.get(comp, 0.0) * weight
+        for comp, weight in weights.items()
+    )
+    
+    return min(1.0, max(0.0, final_score))
 
 
 def _effected_files(row: dict[str, Any]) -> list[dict[str, Any]]:
